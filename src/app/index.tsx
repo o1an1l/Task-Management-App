@@ -1,9 +1,67 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+} from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen() {
   const router = useRouter();
-  
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Hata', 'Email ve şifre alanlarını doldurun.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch('http://10.0.2.2:3000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert('Giriş başarısız', data.message);
+        return;
+      }
+
+      console.log('Login başarılı:', data);
+
+      await SecureStore.setItemAsync('token', data.token);
+
+      router.replace('/(tabs)/boards');
+    
+    } catch (error) {
+      console.error(error);
+
+      Alert.alert(
+        'Bağlantı hatası',
+        'Backend sunucusuna bağlanılamadı.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -20,6 +78,8 @@ export default function LoginScreen() {
           placeholderTextColor="#999"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
 
         <TextInput
@@ -27,15 +87,18 @@ export default function LoginScreen() {
           placeholder="Şifre"
           placeholderTextColor="#999"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
 
-            {/* GEÇİCİ:
-            Backend/authentication bağlantısı yapılana kadar
-            giriş butonu doğrudan ana uygulamaya yönlendiriyor. */}
         <TouchableOpacity
-           style={styles.loginButton}
-            onPress={() => router.replace('/(tabs)/boards')}>
-          <Text style={styles.loginButtonText}>Giriş Yap</Text>
+          style={styles.loginButton}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.registerContainer}>
@@ -47,7 +110,7 @@ export default function LoginScreen() {
             <TouchableOpacity>
               <Text style={styles.registerLink}>Kayıt Ol</Text>
             </TouchableOpacity>
-</Link>
+          </Link>
         </View>
 
       </View>
