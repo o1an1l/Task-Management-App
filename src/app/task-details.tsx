@@ -1,0 +1,395 @@
+import {
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+type Task = {
+  id: number;
+  title: string;
+  description?: string | null;
+  status: string;
+  createdAt: string;
+  boardId: number;
+};
+
+export default function TaskDetailScreen() {
+  const router = useRouter();
+
+  const { taskId, boardId } = useLocalSearchParams<{
+    taskId: string;
+    boardId: string;
+  }>();
+
+  const [task, setTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTask = useCallback(async () => {
+    try {
+      const token = await SecureStore.getItemAsync("token");
+
+      if (!token) {
+        Alert.alert("Hata", "Oturum bulunamadı.");
+        router.replace("/");
+        return;
+      }
+
+      if (!boardId || !taskId) {
+        Alert.alert("Hata", "Görev bilgileri bulunamadı.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://10.0.2.2:3000/tasks/board/${boardId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert(
+          "Hata",
+          data.message || "Görev alınamadı."
+        );
+        return;
+      }
+
+      const selectedTask = data.tasks.find(
+        (item: Task) => item.id === Number(taskId)
+      );
+
+      if (!selectedTask) {
+        Alert.alert("Hata", "Görev bulunamadı.");
+        return;
+      }
+
+      setTask(selectedTask);
+    } catch (error) {
+      console.error(error);
+
+      Alert.alert(
+        "Bağlantı hatası",
+        "Backend sunucusuna bağlanılamadı."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [boardId, taskId, router]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchTask();
+    }, [fetchTask])
+  );
+
+  const deleteTask = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("token");
+
+      if (!token) {
+        Alert.alert("Hata", "Oturum bulunamadı.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://10.0.2.2:3000/tasks/${taskId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert(
+          "Hata",
+          data.message || "Görev silinemedi."
+        );
+        return;
+      }
+
+      Alert.alert(
+        "Başarılı",
+        "Görev başarıyla silindi.",
+        [
+          {
+            text: "Tamam",
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error(error);
+
+      Alert.alert(
+        "Bağlantı hatası",
+        "Backend sunucusuna bağlanılamadı."
+      );
+    }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(
+      "Görevi Sil",
+      "Bu görevi silmek istediğine emin misin?",
+      [
+        {
+          text: "İptal",
+          style: "cancel",
+        },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: deleteTask,
+        },
+      ]
+    );
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "TODO":
+        return "Yapılacak";
+
+      case "IN_PROGRESS":
+        return "Devam Ediyor";
+
+      case "DONE":
+        return "Tamamlandı";
+
+      default:
+        return status;
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+
+        <Text style={styles.loadingText}>
+          Görev yükleniyor...
+        </Text>
+      </View>
+    );
+  }
+
+  if (!task) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>
+          Görev bulunamadı.
+        </Text>
+
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.buttonText}>
+            Geri Dön
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>
+        Görev Detayı
+      </Text>
+
+      <View style={styles.card}>
+        <Text style={styles.taskTitle}>
+          {task.title}
+        </Text>
+
+        {task.description ? (
+          <View style={styles.section}>
+            <Text style={styles.label}>
+              Açıklama
+            </Text>
+
+            <Text style={styles.description}>
+              {task.description}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            Durum
+          </Text>
+
+          <Text style={styles.status}>
+            {getStatusText(task.status)}
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            Görev ID
+          </Text>
+
+          <Text style={styles.info}>
+            {task.id}
+          </Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={styles.editButton}
+        onPress={() =>
+          router.push({
+            pathname: "/edit-task",
+            params: {
+              taskId: String(taskId),
+              boardId: String(boardId),
+            },
+          })
+        }
+      >
+        <Text style={styles.buttonText}>
+          Düzenle
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={confirmDelete}
+      >
+        <Text style={styles.buttonText}>
+          Görevi Sil
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.buttonText}>
+          Geri Dön
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 60,
+    backgroundColor: "#fff",
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+
+  errorText: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 25,
+  },
+
+  card: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 25,
+  },
+
+  taskTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 25,
+  },
+
+  section: {
+    marginBottom: 20,
+  },
+
+  label: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#666",
+    marginBottom: 6,
+  },
+
+  description: {
+    fontSize: 16,
+    color: "#333",
+    lineHeight: 22,
+  },
+
+  status: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  info: {
+    fontSize: 16,
+    color: "#333",
+  },
+
+  editButton: {
+    backgroundColor: "#007AFF",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  deleteButton: {
+    backgroundColor: "#D32F2F",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  backButton: {
+    backgroundColor: "#333",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+});
