@@ -1,0 +1,20 @@
+-- AlterTable
+ALTER TABLE "Task" ADD COLUMN     "listId" INTEGER,
+ADD COLUMN     "order" INTEGER NOT NULL DEFAULT 0;
+
+-- CreateTable
+CREATE TABLE "List" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "boardId" INTEGER NOT NULL,
+
+    CONSTRAINT "List_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "List" ADD CONSTRAINT "List_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Task" ADD CONSTRAINT "Task_listId_fkey" FOREIGN KEY ("listId") REFERENCES "List"("id") ON DELETE CASCADE ON UPDATE CASCADE;
