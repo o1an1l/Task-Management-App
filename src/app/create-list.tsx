@@ -2,13 +2,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 export default function CreateListScreen() {
@@ -44,7 +44,7 @@ export default function CreateListScreen() {
       }
 
       const response = await fetch(
-        `http://192.168.1.126:3000/lists/board/${boardId}`,
+        `https://task-management-app-xc7f.onrender.com/lists/board/${boardId}`,
         {
           method: 'POST',
           headers: {

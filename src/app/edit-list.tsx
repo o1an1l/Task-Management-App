@@ -1,18 +1,18 @@
 import {
-  useFocusEffect,
-  useLocalSearchParams,
-  useRouter,
+    useFocusEffect,
+    useLocalSearchParams,
+    useRouter,
 } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 type List = {
@@ -50,7 +50,7 @@ export default function EditListScreen() {
       }
 
       const response = await fetch(
-        `http://192.168.1.126:3000/lists/${listId}`,
+        `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
         {
           method: 'GET',
           headers: {
@@ -111,7 +111,7 @@ export default function EditListScreen() {
       }
 
       const response = await fetch(
-        `http://192.168.1.126:3000/lists/${listId}`,
+        `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
         {
           method: 'PUT',
           headers: {

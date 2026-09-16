@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       }
 
       const response = await fetch(
-        "http://192.168.1.126:3000/profile",
+        "https://task-management-app-xc7f.onrender.com/profile",
         {
           method: "GET",
           headers: {

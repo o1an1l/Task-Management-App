@@ -2,12 +2,12 @@ import { Link, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 export default function LoginScreen() {
@@ -41,7 +41,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
-      const response = await fetch('http://192.168.1.126:3000/auth/login', {
+      const response = await fetch('https://task-management-app-xc7f.onrender.com/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

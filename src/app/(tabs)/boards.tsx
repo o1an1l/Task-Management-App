@@ -3,13 +3,13 @@ import * as SecureStore from 'expo-secure-store';
 import { useCallback, useState } from 'react';
 
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 type Board = {
@@ -42,7 +42,7 @@ export default function BoardListScreen() {
       }
 
       const response = await fetch(
-        'http://192.168.1.126:3000/boards',
+        'https://task-management-app-xc7f.onrender.com/boards',
         {
           method: 'GET',
           headers: {
@@ -99,7 +99,7 @@ export default function BoardListScreen() {
       }
 
       const response = await fetch(
-        `http://192.168.1.126:3000/boards/${boardId}`,
+        `https://task-management-app-xc7f.onrender.com/boards/${boardId}`,
         {
           method: 'DELETE',
           headers: {

@@ -1,20 +1,20 @@
 import DateTimePicker from "@expo/ui/community/datetime-picker";
 import {
-  useFocusEffect,
-  useLocalSearchParams,
-  useRouter,
+    useFocusEffect,
+    useLocalSearchParams,
+    useRouter,
 } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 type Task = {
@@ -117,7 +117,7 @@ export default function EditTaskScreen() {
 
       // Görevi getir
       const taskResponse = await fetch(
-        `http://192.168.1.126:3000/tasks/board/${boardId}`,
+        `https://task-management-app-xc7f.onrender.com/tasks/board/${boardId}`,
         {
           method: "GET",
           headers: {
@@ -155,7 +155,7 @@ export default function EditTaskScreen() {
       // Listeleri getir
       const listResponse =
         await fetch(
-          `http://192.168.1.126:3000/lists/board/${boardId}`,
+          `https://task-management-app-xc7f.onrender.com/lists/board/${boardId}`,
           {
             method: "GET",
             headers: {
@@ -186,7 +186,7 @@ export default function EditTaskScreen() {
       // Kullanıcıları getir
       const userResponse =
         await fetch(
-          "http://192.168.1.126:3000/auth/users",
+          "https://task-management-app-xc7f.onrender.com/auth/users",
           {
             method: "GET",
             headers: {
@@ -350,7 +350,7 @@ export default function EditTaskScreen() {
       }
 
       const response = await fetch(
-        `http://192.168.1.126:3000/tasks/${taskId}`,
+        `https://task-management-app-xc7f.onrender.com/tasks/${taskId}`,
         {
           method: "PUT",
           headers: {

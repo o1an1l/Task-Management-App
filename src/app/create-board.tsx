@@ -2,12 +2,12 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 export default function CreateBoardScreen() {
@@ -35,7 +35,7 @@ export default function CreateBoardScreen() {
       }
 
       const response = await fetch(
-        'http://192.168.1.126:3000/boards',
+        'https://task-management-app-xc7f.onrender.com/boards',
         {
           method: 'POST',
           headers: {

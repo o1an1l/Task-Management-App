@@ -1,18 +1,18 @@
 import {
-  useFocusEffect,
-  useLocalSearchParams,
-  useRouter,
+    useFocusEffect,
+    useLocalSearchParams,
+    useRouter,
 } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 type Task = {
@@ -82,7 +82,7 @@ export default function TaskDetailScreen() {
 
         const response =
           await fetch(
-            `http://192.168.1.126:3000/tasks/board/${boardId}`,
+            `https://task-management-app-xc7f.onrender.com/tasks/board/${boardId}`,
             {
               method: "GET",
               headers: {
@@ -157,7 +157,7 @@ export default function TaskDetailScreen() {
 
       const response =
         await fetch(
-          `http://192.168.1.126:3000/tasks/${taskId}`,
+          `https://task-management-app-xc7f.onrender.com/tasks/${taskId}`,
           {
             method: "DELETE",
             headers: {

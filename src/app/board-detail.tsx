@@ -1,7 +1,7 @@
 import {
-  useFocusEffect,
-  useLocalSearchParams,
-  useRouter,
+    useFocusEffect,
+    useLocalSearchParams,
+    useRouter,
 } from 'expo-router';
 
 import * as SecureStore from 'expo-secure-store';
@@ -9,27 +9,27 @@ import * as SecureStore from 'expo-secure-store';
 import { useCallback, useState } from 'react';
 
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 import {
-  GestureHandlerRootView,
+    GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 
 import Animated, {
-  useAnimatedRef,
-  useAnimatedScrollHandler,
-  useSharedValue,
+    useAnimatedRef,
+    useAnimatedScrollHandler,
+    useSharedValue,
 } from 'react-native-reanimated';
 
 import DraggableTaskCard, {
-  Task,
+    Task,
 } from '../components/DraggableTaskCard';
 
 type List = {
@@ -137,7 +137,7 @@ export default function BoardDetailScreen() {
 
         const response =
           await fetch(
-            `http://192.168.1.126:3000/tasks/board/${boardId}`,
+            `https://task-management-app-xc7f.onrender.com/tasks/board/${boardId}`,
             {
               method: 'GET',
               headers: {
@@ -196,7 +196,7 @@ export default function BoardDetailScreen() {
 
         const response =
           await fetch(
-            `http://192.168.1.126:3000/lists/board/${boardId}`,
+            `https://task-management-app-xc7f.onrender.com/lists/board/${boardId}`,
             {
               method: 'GET',
               headers: {
@@ -314,7 +314,7 @@ export default function BoardDetailScreen() {
 
       const response =
         await fetch(
-          `http://192.168.1.126:3000/tasks/${task.id}/move`,
+          `https://task-management-app-xc7f.onrender.com/tasks/${task.id}/move`,
           {
             method: 'PATCH',
             headers: {
@@ -543,7 +543,7 @@ export default function BoardDetailScreen() {
 
       const response =
         await fetch(
-          `http://192.168.1.126:3000/lists/${listId}`,
+          `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
           {
             method: 'DELETE',
             headers: {
