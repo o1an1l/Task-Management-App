@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it at https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+
+  boards       Board[]
+  assignedTasks Task[]
+}
+
+model Board {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lists       List[]
+  tasks       Task[]
+}
+
+model List {
+  id        Int      @id @default(autoincrement())
+  title     String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  boardId   Int
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  tasks     Task[]
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  status      String   @default("TODO")
+  priority    String   @default("MEDIUM")
+  dueDate     DateTime?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  boardId     Int
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  listId      Int?
+  list        List?    @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  assigneeId  Int?
+  assignee    User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+}
