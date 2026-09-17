@@ -1,21 +1,30 @@
-import DateTimePicker from "@expo/ui/community/datetime-picker";
+import DateTimePicker from '@expo/ui/community/datetime-picker';
+
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
-} from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { useCallback, useState } from "react";
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from 'expo-router';
+
+import * as SecureStore from 'expo-secure-store';
+
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
+  useCallback,
+  useState,
+} from 'react';
+
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 type Task = {
   id: number;
@@ -49,8 +58,12 @@ type User = {
 
 export default function EditTaskScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const { taskId, boardId } = useLocalSearchParams<{
+  const {
+    taskId,
+    boardId,
+  } = useLocalSearchParams<{
     taskId: string;
     boardId: string;
   }>();
@@ -64,15 +77,19 @@ export default function EditTaskScreen() {
   const [users, setUsers] =
     useState<User[]>([]);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] =
-    useState("");
+  const [title, setTitle] =
+    useState('');
 
-  const [selectedListId, setSelectedListId] =
-    useState<number | null>(null);
+  const [description, setDescription] =
+    useState('');
+
+  const [
+    selectedListId,
+    setSelectedListId,
+  ] = useState<number | null>(null);
 
   const [priority, setPriority] =
-    useState("MEDIUM");
+    useState('MEDIUM');
 
   const [dueDate, setDueDate] =
     useState<Date | null>(null);
@@ -80,8 +97,10 @@ export default function EditTaskScreen() {
   const [showDatePicker, setShowDatePicker] =
     useState(false);
 
-  const [selectedAssigneeId, setSelectedAssigneeId] =
-    useState<number | null>(null);
+  const [
+    selectedAssigneeId,
+    setSelectedAssigneeId,
+  ] = useState<number | null>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -95,45 +114,46 @@ export default function EditTaskScreen() {
 
       const token =
         await SecureStore.getItemAsync(
-          "token"
+          'token'
         );
 
       if (!token) {
         Alert.alert(
-          "Hata",
-          "Oturum bulunamadı."
+          'Hata',
+          'Oturum bulunamadı.'
         );
-        router.replace("/");
+        router.replace('/');
         return;
       }
 
       if (!boardId || !taskId) {
         Alert.alert(
-          "Hata",
-          "Görev bilgileri bulunamadı."
+          'Hata',
+          'Görev bilgileri bulunamadı.'
         );
         return;
       }
 
-      // Görevi getir
-      const taskResponse = await fetch(
-        `https://task-management-app-xc7f.onrender.com/tasks/board/${boardId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const taskResponse =
+        await fetch(
+          `https://task-management-app-xc7f.onrender.com/tasks/board/${boardId}`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
 
       const taskData =
         await taskResponse.json();
 
       if (!taskResponse.ok) {
         Alert.alert(
-          "Hata",
+          'Hata',
           taskData.message ||
-            "Görev alınamadı."
+            'Görev alınamadı.'
         );
         return;
       }
@@ -141,23 +161,23 @@ export default function EditTaskScreen() {
       const selectedTask =
         taskData.tasks.find(
           (item: Task) =>
-            item.id === Number(taskId)
+            item.id ===
+            Number(taskId)
         );
 
       if (!selectedTask) {
         Alert.alert(
-          "Hata",
-          "Görev bulunamadı."
+          'Hata',
+          'Görev bulunamadı.'
         );
         return;
       }
 
-      // Listeleri getir
       const listResponse =
         await fetch(
           `https://task-management-app-xc7f.onrender.com/lists/board/${boardId}`,
           {
-            method: "GET",
+            method: 'GET',
             headers: {
               Authorization:
                 `Bearer ${token}`,
@@ -170,25 +190,27 @@ export default function EditTaskScreen() {
 
       if (!listResponse.ok) {
         Alert.alert(
-          "Hata",
+          'Hata',
           listData.message ||
-            "Listeler alınamadı."
+            'Listeler alınamadı.'
         );
         return;
       }
 
       const sortedLists =
         [...listData.lists].sort(
-          (a: List, b: List) =>
+          (
+            a: List,
+            b: List
+          ) =>
             a.order - b.order
         );
 
-      // Kullanıcıları getir
       const userResponse =
         await fetch(
-          "https://task-management-app-xc7f.onrender.com/auth/users",
+          'https://task-management-app-xc7f.onrender.com/auth/users',
           {
-            method: "GET",
+            method: 'GET',
             headers: {
               Authorization:
                 `Bearer ${token}`,
@@ -201,23 +223,31 @@ export default function EditTaskScreen() {
 
       if (!userResponse.ok) {
         Alert.alert(
-          "Hata",
+          'Hata',
           userData.message ||
-            "Kullanıcılar alınamadı."
+            'Kullanıcılar alınamadı.'
         );
         return;
       }
 
       setTask(selectedTask);
       setLists(sortedLists);
-      setUsers(userData.users || []);
-
-      setTitle(selectedTask.title);
-      setDescription(
-        selectedTask.description || ""
+      setUsers(
+        userData.users || []
       );
 
-      if (selectedTask.listId) {
+      setTitle(
+        selectedTask.title
+      );
+
+      setDescription(
+        selectedTask.description ||
+          ''
+      );
+
+      if (
+        selectedTask.listId
+      ) {
         setSelectedListId(
           selectedTask.listId
         );
@@ -230,30 +260,39 @@ export default function EditTaskScreen() {
       }
 
       setPriority(
-        selectedTask.priority || "MEDIUM"
+        selectedTask.priority ||
+          'MEDIUM'
       );
 
-      if (selectedTask.dueDate) {
+      if (
+        selectedTask.dueDate
+      ) {
         setDueDate(
-          new Date(selectedTask.dueDate)
+          new Date(
+            selectedTask.dueDate
+          )
         );
       } else {
         setDueDate(null);
       }
 
-      if (selectedTask.assignee) {
+      if (
+        selectedTask.assignee
+      ) {
         setSelectedAssigneeId(
           selectedTask.assignee.id
         );
       } else {
-        setSelectedAssigneeId(null);
+        setSelectedAssigneeId(
+          null
+        );
       }
     } catch (error) {
       console.error(error);
 
       Alert.alert(
-        "Bağlantı hatası",
-        "Backend sunucusuna bağlanılamadı."
+        'Bağlantı hatası',
+        'Backend sunucusuna bağlanamadı.'
       );
     } finally {
       setLoading(false);
@@ -273,17 +312,27 @@ export default function EditTaskScreen() {
     setShowDatePicker(false);
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
     const selectedDay =
       new Date(selectedDate);
 
-    selectedDay.setHours(0, 0, 0, 0);
+    selectedDay.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
     if (selectedDay < today) {
       Alert.alert(
-        "Geçersiz tarih",
-        "Geçmiş bir tarih seçemezsiniz."
+        'Geçersiz tarih',
+        'Geçmiş bir tarih seçemezsiniz.'
       );
       return;
     }
@@ -300,16 +349,16 @@ export default function EditTaskScreen() {
 
     if (trimmedTitle.length < 2) {
       Alert.alert(
-        "Hata",
-        "Görev başlığı en az 2 karakter olmalıdır."
+        'Hata',
+        'Görev başlığı en az 2 karakter olmalıdır.'
       );
       return;
     }
 
     if (trimmedTitle.length > 150) {
       Alert.alert(
-        "Hata",
-        "Görev başlığı en fazla 150 karakter olabilir."
+        'Hata',
+        'Görev başlığı en fazla 150 karakter olabilir.'
       );
       return;
     }
@@ -319,16 +368,16 @@ export default function EditTaskScreen() {
       1000
     ) {
       Alert.alert(
-        "Hata",
-        "Görev açıklaması en fazla 1000 karakter olabilir."
+        'Hata',
+        'Görev açıklaması en fazla 1000 karakter olabilir.'
       );
       return;
     }
 
     if (!selectedListId) {
       Alert.alert(
-        "Hata",
-        "Lütfen bir liste seçin."
+        'Hata',
+        'Lütfen bir liste seçin.'
       );
       return;
     }
@@ -338,61 +387,63 @@ export default function EditTaskScreen() {
 
       const token =
         await SecureStore.getItemAsync(
-          "token"
+          'token'
         );
 
       if (!token) {
         Alert.alert(
-          "Hata",
-          "Oturum bulunamadı."
+          'Hata',
+          'Oturum bulunamadı.'
         );
         return;
       }
 
-      const response = await fetch(
-        `https://task-management-app-xc7f.onrender.com/tasks/${taskId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type":
-              "application/json",
-            Authorization:
-              `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: trimmedTitle,
-            description:
-              trimmedDescription,
-            listId:
-              selectedListId,
-            priority,
-            dueDate: dueDate
-              ? dueDate.toISOString()
-              : null,
-            assigneeId:
-              selectedAssigneeId,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `https://task-management-app-xc7f.onrender.com/tasks/${taskId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type':
+                'application/json',
+              Authorization:
+                `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              title:
+                trimmedTitle,
+              description:
+                trimmedDescription,
+              listId:
+                selectedListId,
+              priority,
+              dueDate: dueDate
+                ? dueDate.toISOString()
+                : null,
+              assigneeId:
+                selectedAssigneeId,
+            }),
+          }
+        );
 
       const data =
         await response.json();
 
       if (!response.ok) {
         Alert.alert(
-          "Hata",
+          'Hata',
           data.message ||
-            "Görev güncellenemedi."
+            'Görev güncellenemedi.'
         );
         return;
       }
 
       Alert.alert(
-        "Başarılı",
-        "Görev başarıyla güncellendi.",
+        'Başarılı',
+        'Görev başarıyla güncellendi.',
         [
           {
-            text: "Tamam",
+            text: 'Tamam',
             onPress: () =>
               router.back(),
           },
@@ -402,8 +453,8 @@ export default function EditTaskScreen() {
       console.error(error);
 
       Alert.alert(
-        "Bağlantı hatası",
-        "Backend sunucusuna bağlanılamadı."
+        'Bağlantı hatası',
+        'Backend sunucusuna bağlanamadı.'
       );
     } finally {
       setSaving(false);
@@ -412,10 +463,28 @@ export default function EditTaskScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
 
-        <Text style={styles.loadingText}>
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Görev yükleniyor...
         </Text>
       </View>
@@ -424,16 +493,35 @@ export default function EditTaskScreen() {
 
   if (!task) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.errorText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Görev bulunamadı.
         </Text>
 
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() =>
+            router.back()
+          }
         >
-          <Text style={styles.buttonText}>
+          <Text
+            style={styles.buttonText}
+          >
             Geri Dön
           </Text>
         </TouchableOpacity>
@@ -443,29 +531,68 @@ export default function EditTaskScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
       contentContainerStyle={
         styles.contentContainer
       }
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Görevi Düzenle
       </Text>
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Görev Adı
       </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         value={title}
         onChangeText={setTitle}
         placeholder="Görev adı"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         maxLength={150}
       />
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Açıklama
       </Text>
 
@@ -473,29 +600,64 @@ export default function EditTaskScreen() {
         style={[
           styles.input,
           styles.descriptionInput,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
         ]}
         value={description}
-        onChangeText={setDescription}
+        onChangeText={
+          setDescription
+        }
         placeholder="Görev açıklaması"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         multiline
         maxLength={1000}
       />
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Liste
       </Text>
 
       {lists.length === 0 ? (
-        <Text style={styles.noListText}>
+        <Text
+          style={[
+            styles.noListText,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
+        >
           Bu panoda henüz liste bulunmuyor.
         </Text>
       ) : (
-        <View style={styles.listContainer}>
+        <View
+          style={
+            styles.listContainer
+          }
+        >
           {lists.map((list) => (
             <TouchableOpacity
               key={list.id}
               style={[
                 styles.listButton,
+                {
+                  borderColor:
+                    colors.border,
+                },
                 selectedListId ===
                   list.id &&
                   styles.selectedList,
@@ -509,6 +671,10 @@ export default function EditTaskScreen() {
               <Text
                 style={[
                   styles.listButtonText,
+                  {
+                    color:
+                      colors.text,
+                  },
                   selectedListId ===
                     list.id &&
                     styles.selectedListText,
@@ -521,27 +687,46 @@ export default function EditTaskScreen() {
         </View>
       )}
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Öncelik
       </Text>
 
       <View
-        style={styles.priorityContainer}
+        style={
+          styles.priorityContainer
+        }
       >
         <TouchableOpacity
           style={[
             styles.priorityButton,
-            priority === "LOW" &&
+            {
+              borderColor:
+                colors.border,
+            },
+            priority ===
+              'LOW' &&
               styles.selectedPriority,
           ]}
           onPress={() =>
-            setPriority("LOW")
+            setPriority('LOW')
           }
         >
           <Text
             style={[
               styles.priorityText,
-              priority === "LOW" &&
+              {
+                color:
+                  colors.text,
+              },
+              priority ===
+                'LOW' &&
                 styles.selectedPriorityText,
             ]}
           >
@@ -552,18 +737,27 @@ export default function EditTaskScreen() {
         <TouchableOpacity
           style={[
             styles.priorityButton,
-            priority === "MEDIUM" &&
+            {
+              borderColor:
+                colors.border,
+            },
+            priority ===
+              'MEDIUM' &&
               styles.selectedPriority,
           ]}
           onPress={() =>
-            setPriority("MEDIUM")
+            setPriority('MEDIUM')
           }
         >
           <Text
             style={[
               styles.priorityText,
+              {
+                color:
+                  colors.text,
+              },
               priority ===
-                "MEDIUM" &&
+                'MEDIUM' &&
                 styles.selectedPriorityText,
             ]}
           >
@@ -574,17 +768,27 @@ export default function EditTaskScreen() {
         <TouchableOpacity
           style={[
             styles.priorityButton,
-            priority === "HIGH" &&
+            {
+              borderColor:
+                colors.border,
+            },
+            priority ===
+              'HIGH' &&
               styles.selectedPriority,
           ]}
           onPress={() =>
-            setPriority("HIGH")
+            setPriority('HIGH')
           }
         >
           <Text
             style={[
               styles.priorityText,
-              priority === "HIGH" &&
+              {
+                color:
+                  colors.text,
+              },
+              priority ===
+                'HIGH' &&
                 styles.selectedPriorityText,
             ]}
           >
@@ -593,22 +797,45 @@ export default function EditTaskScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Son Tarih
       </Text>
 
       <TouchableOpacity
-        style={styles.dateButton}
+        style={[
+          styles.dateButton,
+          {
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         onPress={() =>
           setShowDatePicker(true)
         }
       >
-        <Text style={styles.dateButtonText}>
+        <Text
+          style={[
+            styles.dateButtonText,
+            {
+              color:
+                colors.text,
+            },
+          ]}
+        >
           {dueDate
             ? dueDate.toLocaleDateString(
-                "tr-TR"
+                'tr-TR'
               )
-            : "Son tarih seçin (isteğe bağlı)"}
+            : 'Son tarih seçin (isteğe bağlı)'}
         </Text>
       </TouchableOpacity>
 
@@ -629,10 +856,14 @@ export default function EditTaskScreen() {
 
       {showDatePicker ? (
         <DateTimePicker
-          value={dueDate || new Date()}
+          value={
+            dueDate || new Date()
+          }
           mode="date"
           presentation="dialog"
-          minimumDate={new Date()}
+          minimumDate={
+            new Date()
+          }
           onValueChange={
             handleDateChange
           }
@@ -642,13 +873,24 @@ export default function EditTaskScreen() {
         />
       ) : null}
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Atanan Kişi
       </Text>
 
       <TouchableOpacity
         style={[
           styles.assigneeButton,
+          {
+            borderColor:
+              colors.border,
+          },
           selectedAssigneeId ===
             null &&
             styles.selectedAssignee,
@@ -660,6 +902,10 @@ export default function EditTaskScreen() {
         <Text
           style={[
             styles.assigneeText,
+            {
+              color:
+                colors.text,
+            },
             selectedAssigneeId ===
               null &&
               styles.selectedAssigneeText,
@@ -670,16 +916,32 @@ export default function EditTaskScreen() {
       </TouchableOpacity>
 
       {users.length === 0 ? (
-        <Text style={styles.noUserText}>
+        <Text
+          style={[
+            styles.noUserText,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
+        >
           Kayıtlı kullanıcı bulunmuyor.
         </Text>
       ) : (
-        <View style={styles.userContainer}>
+        <View
+          style={
+            styles.userContainer
+          }
+        >
           {users.map((user) => (
             <TouchableOpacity
               key={user.id}
               style={[
                 styles.assigneeButton,
+                {
+                  borderColor:
+                    colors.border,
+                },
                 selectedAssigneeId ===
                   user.id &&
                   styles.selectedAssignee,
@@ -693,6 +955,10 @@ export default function EditTaskScreen() {
               <Text
                 style={[
                   styles.assigneeText,
+                  {
+                    color:
+                      colors.text,
+                  },
                   selectedAssigneeId ===
                     user.id &&
                     styles.selectedAssigneeText,
@@ -722,7 +988,9 @@ export default function EditTaskScreen() {
         {saving ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>
+          <Text
+            style={styles.buttonText}
+          >
             Değişiklikleri Kaydet
           </Text>
         )}
@@ -730,10 +998,14 @@ export default function EditTaskScreen() {
 
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => router.back()}
+        onPress={() =>
+          router.back()
+        }
         disabled={saving}
       >
-        <Text style={styles.buttonText}>
+        <Text
+          style={styles.buttonText}
+        >
           İptal
         </Text>
       </TouchableOpacity>
@@ -744,7 +1016,6 @@ export default function EditTaskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
 
   contentContainer: {
@@ -755,8 +1026,8 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
 
@@ -772,29 +1043,27 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 30,
   },
 
   label: {
     fontSize: 15,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 8,
   },
 
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 10,
     padding: 14,
     fontSize: 16,
     marginBottom: 20,
-    backgroundColor: "#fff",
   },
 
   descriptionInput: {
     height: 100,
-    textAlignVertical: "top",
+    textAlignVertical: 'top',
   },
 
   listContainer: {
@@ -804,29 +1073,29 @@ const styles = StyleSheet.create({
 
   listButton: {
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 10,
     padding: 13,
-    alignItems: "center",
+    alignItems: 'center',
   },
 
   selectedList: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
+    backgroundColor:
+      '#007AFF',
+    borderColor:
+      '#007AFF',
   },
 
   listButtonText: {
     fontSize: 15,
-    color: "#333",
   },
 
   selectedListText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   priorityContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
     marginBottom: 20,
   },
@@ -834,30 +1103,29 @@ const styles = StyleSheet.create({
   priorityButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 10,
     paddingVertical: 12,
-    alignItems: "center",
+    alignItems: 'center',
   },
 
   selectedPriority: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
+    backgroundColor:
+      '#007AFF',
+    borderColor:
+      '#007AFF',
   },
 
   priorityText: {
     fontSize: 15,
-    color: "#333",
   },
 
   selectedPriorityText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   dateButton: {
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 15,
@@ -866,23 +1134,21 @@ const styles = StyleSheet.create({
 
   dateButtonText: {
     fontSize: 15,
-    color: "#333",
   },
 
   clearDateButton: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     marginBottom: 15,
   },
 
   clearDateText: {
-    color: "#D32F2F",
+    color: '#D32F2F',
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 
   assigneeButton: {
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 15,
@@ -890,19 +1156,20 @@ const styles = StyleSheet.create({
   },
 
   selectedAssignee: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
+    backgroundColor:
+      '#007AFF',
+    borderColor:
+      '#007AFF',
   },
 
   assigneeText: {
     fontSize: 15,
-    color: "#333",
-    textAlign: "center",
+    textAlign: 'center',
   },
 
   selectedAssigneeText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   userContainer: {
@@ -910,21 +1177,20 @@ const styles = StyleSheet.create({
   },
 
   noUserText: {
-    color: "#999",
     marginBottom: 20,
   },
 
   noListText: {
-    color: "#666",
     marginBottom: 25,
     fontSize: 15,
   },
 
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor:
+      '#007AFF',
     padding: 15,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 10,
     marginTop: 5,
   },
@@ -934,15 +1200,16 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    backgroundColor: "#333",
+    backgroundColor:
+      '#333',
     padding: 15,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
 
   buttonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });

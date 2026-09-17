@@ -1,6 +1,7 @@
-import { useFocusEffect, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { useCallback, useState } from "react";
+import { useFocusEffect, useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useCallback, useState } from 'react';
+
 import {
   ActivityIndicator,
   Alert,
@@ -8,7 +9,9 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
+} from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 type User = {
   id: number;
@@ -18,26 +21,32 @@ type User = {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
 
       const token =
-        await SecureStore.getItemAsync("token");
+        await SecureStore.getItemAsync(
+          'token'
+        );
 
       if (!token) {
-        router.replace("/");
+        router.replace('/');
         return;
       }
 
       const response = await fetch(
-        "https://task-management-app-xc7f.onrender.com/profile",
+        'https://task-management-app-xc7f.onrender.com/profile',
         {
-          method: "GET",
+          method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -48,9 +57,9 @@ export default function ProfileScreen() {
 
       if (!response.ok) {
         Alert.alert(
-          "Hata",
+          'Hata',
           data.message ||
-            "Profil bilgileri alınamadı."
+            'Profil bilgileri alınamadı.'
         );
         return;
       }
@@ -60,8 +69,8 @@ export default function ProfileScreen() {
       console.error(error);
 
       Alert.alert(
-        "Bağlantı hatası",
-        "Backend sunucusuna bağlanamadı."
+        'Bağlantı hatası',
+        'Backend sunucusuna bağlanamadı.'
       );
     } finally {
       setLoading(false);
@@ -76,22 +85,22 @@ export default function ProfileScreen() {
 
   const logout = async () => {
     Alert.alert(
-      "Çıkış Yap",
-      "Hesabınızdan çıkmak istediğinize emin misiniz?",
+      'Çıkış Yap',
+      'Hesabınızdan çıkmak istediğinize emin misiniz?',
       [
         {
-          text: "İptal",
-          style: "cancel",
+          text: 'İptal',
+          style: 'cancel',
         },
         {
-          text: "Çıkış Yap",
-          style: "destructive",
+          text: 'Çıkış Yap',
+          style: 'destructive',
           onPress: async () => {
             await SecureStore.deleteItemAsync(
-              "token"
+              'token'
             );
 
-            router.replace("/");
+            router.replace('/');
           },
         },
       ]
@@ -100,10 +109,11 @@ export default function ProfileScreen() {
 
   const getInitials = () => {
     if (!user?.name) {
-      return "?";
+      return '?';
     }
 
-    const parts = user.name.trim().split(" ");
+    const parts =
+      user.name.trim().split(' ');
 
     if (parts.length === 1) {
       return parts[0]
@@ -119,10 +129,28 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
 
-        <Text style={styles.loadingText}>
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Profil yükleniyor...
         </Text>
       </View>
@@ -131,8 +159,23 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.errorText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Profil bilgileri bulunamadı.
         </Text>
       </View>
@@ -140,8 +183,23 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Profil
       </Text>
 
@@ -153,52 +211,130 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.headerInfo}>
-          <Text style={styles.name}>
+          <Text
+            style={[
+              styles.name,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             {user.name ||
-              "İsimsiz Kullanıcı"}
+              'İsimsiz Kullanıcı'}
           </Text>
 
-          <Text style={styles.email}>
+          <Text
+            style={[
+              styles.email,
+              {
+                color: colors.secondaryText,
+              },
+            ]}
+          >
             {user.email}
           </Text>
         </View>
       </View>
 
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor:
+              colors.card,
+          },
+        ]}
+      >
         <View style={styles.infoRow}>
-          <Text style={styles.label}>
+          <Text
+            style={[
+              styles.label,
+              {
+                color: colors.secondaryText,
+              },
+            ]}
+          >
             Ad Soyad
           </Text>
 
-          <Text style={styles.value}>
+          <Text
+            style={[
+              styles.value,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             {user.name ||
-              "Belirtilmemiş"}
+              'Belirtilmemiş'}
           </Text>
         </View>
 
-        <View style={styles.divider} />
+        <View
+          style={[
+            styles.divider,
+            {
+              backgroundColor:
+                colors.border,
+            },
+          ]}
+        />
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>
+          <Text
+            style={[
+              styles.label,
+              {
+                color: colors.secondaryText,
+              },
+            ]}
+          >
             E-posta
           </Text>
 
           <Text
-            style={styles.value}
+            style={[
+              styles.value,
+              {
+                color: colors.text,
+              },
+            ]}
             numberOfLines={1}
           >
             {user.email}
           </Text>
         </View>
 
-        <View style={styles.divider} />
+        <View
+          style={[
+            styles.divider,
+            {
+              backgroundColor:
+                colors.border,
+            },
+          ]}
+        />
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>
+          <Text
+            style={[
+              styles.label,
+              {
+                color: colors.secondaryText,
+              },
+            ]}
+          >
             Kullanıcı ID
           </Text>
 
-          <Text style={styles.value}>
+          <Text
+            style={[
+              styles.value,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             #{user.id}
           </Text>
         </View>
@@ -220,27 +356,26 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     padding: 20,
     paddingTop: 60,
   },
 
   center: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
 
   title: {
     fontSize: 30,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 30,
   },
 
   profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 25,
   },
 
@@ -248,16 +383,16 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "#007AFF",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 15,
   },
 
   avatarText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 25,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 
   headerInfo: {
@@ -266,17 +401,15 @@ const styles = StyleSheet.create({
 
   name: {
     fontSize: 21,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 5,
   },
 
   email: {
     fontSize: 14,
-    color: "#666",
   },
 
   card: {
-    backgroundColor: "#f5f5f5",
     borderRadius: 14,
     paddingHorizontal: 20,
     paddingVertical: 5,
@@ -288,33 +421,30 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 13,
-    fontWeight: "bold",
-    color: "#777",
+    fontWeight: 'bold',
     marginBottom: 6,
   },
 
   value: {
     fontSize: 17,
-    color: "#222",
   },
 
   divider: {
     height: 1,
-    backgroundColor: "#ddd",
   },
 
   logoutButton: {
     marginTop: 25,
-    backgroundColor: "#D32F2F",
+    backgroundColor: '#D32F2F',
     borderRadius: 10,
     paddingVertical: 15,
-    alignItems: "center",
+    alignItems: 'center',
   },
 
   logoutButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 
   loadingText: {

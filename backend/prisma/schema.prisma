@@ -17,8 +17,9 @@ model User {
   name      String?
   createdAt DateTime @default(now())
 
-  boards       Board[]
+  boards        Board[]
   assignedTasks Task[]
+  comments      Comment[]
 }
 
 model Board {
@@ -64,4 +65,18 @@ model Task {
 
   assigneeId  Int?
   assignee    User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  comments    Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

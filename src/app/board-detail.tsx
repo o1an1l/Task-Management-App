@@ -1,36 +1,42 @@
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from 'expo-router';
 
 import * as SecureStore from 'expo-secure-store';
 
-import { useCallback, useState } from 'react';
+import {
+  useCallback,
+  useState,
+} from 'react';
 
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import {
-    GestureHandlerRootView,
+  GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 
 import Animated, {
-    useAnimatedRef,
-    useAnimatedScrollHandler,
-    useSharedValue,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useSharedValue,
 } from 'react-native-reanimated';
 
 import DraggableTaskCard, {
-    Task,
+  Task,
 } from '../components/DraggableTaskCard';
+
+import { useTheme } from '@/context/ThemeContext';
 
 type List = {
   id: number;
@@ -45,6 +51,12 @@ type TaskLayout = {
   height: number;
 };
 
+type PriorityFilter =
+  | 'ALL'
+  | 'LOW'
+  | 'MEDIUM'
+  | 'HIGH';
+
 const { width: SCREEN_WIDTH } =
   Dimensions.get('window');
 
@@ -55,6 +67,7 @@ const COLUMN_GAP = 15;
 
 export default function BoardDetailScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   const {
     boardId,
@@ -78,8 +91,16 @@ export default function BoardDetailScreen() {
   const [dragging, setDragging] =
     useState(false);
 
+  const [searchQuery, setSearchQuery] =
+    useState('');
+
+  const [priorityFilter, setPriorityFilter] =
+    useState<PriorityFilter>('ALL');
+
   const [taskLayouts, setTaskLayouts] =
-    useState<Record<number, TaskLayout>>({});
+    useState<Record<number, TaskLayout>>(
+      {}
+    );
 
   const horizontalScrollRef =
     useAnimatedRef<Animated.ScrollView>();
@@ -233,7 +254,7 @@ export default function BoardDetailScreen() {
 
         Alert.alert(
           'Bağlantı hatası',
-          'Backend sunucusuna bağlanamadı.'
+          'Backend sunucusuna bağlanılamadı.'
         );
       }
     }, [boardId]);
@@ -259,8 +280,31 @@ export default function BoardDetailScreen() {
     ])
   );
 
+  const filteredTasks =
+    tasks.filter((task) => {
+      const matchesTitle =
+        task.title
+          .toLowerCase()
+          .includes(
+            searchQuery
+              .trim()
+              .toLowerCase()
+          );
+
+      const matchesPriority =
+        priorityFilter === 'ALL' ||
+        task.priority ===
+          priorityFilter;
+
+      return (
+        matchesTitle &&
+        matchesPriority
+      );
+    });
+
   const getTasksForList = (
-    list: List
+    list: List,
+    applyFilters = true
   ) => {
     const statusOrderMap:
       Record<string, number> = {
@@ -269,7 +313,12 @@ export default function BoardDetailScreen() {
         DONE: 2,
       };
 
-    return [...tasks]
+    const sourceTasks =
+      applyFilters
+        ? filteredTasks
+        : tasks;
+
+    return [...sourceTasks]
       .filter((task) => {
         if (
           task.listId !== null &&
@@ -372,17 +421,6 @@ export default function BoardDetailScreen() {
       return;
     }
 
-    /*
-      absoluteX:
-      Parmağın ekran üzerindeki X konumu
-
-      currentScrollX:
-      Horizontal ScrollView'in kayma miktarı
-
-      İkisini toplayarak panodaki gerçek
-      X konumunu buluyoruz.
-    */
-
     const contentX =
       absoluteX + currentScrollX;
 
@@ -413,13 +451,9 @@ export default function BoardDetailScreen() {
 
     const targetTasks =
       getTasksForList(
-        targetList
+        targetList,
+        false
       );
-
-    /*
-      Sürüklenen görevi hedef listedeki
-      karşılaştırmadan çıkarıyoruz.
-    */
 
     const remainingTasks =
       targetTasks.filter(
@@ -427,11 +461,6 @@ export default function BoardDetailScreen() {
           targetTask.id !==
           task.id
       );
-
-    /*
-      Görev kartlarını ekrandaki Y
-      konumlarına göre sıralıyoruz.
-    */
 
     const tasksWithLayout =
       remainingTasks
@@ -443,44 +472,31 @@ export default function BoardDetailScreen() {
             ],
         }))
         .filter(
-          (
-            item
-          ) =>
+          (item) =>
             item.layout !==
             undefined
         )
         .sort(
           (a, b) =>
-            a.layout.y -
-            b.layout.y
+            a.layout!.y -
+            b.layout!.y
         );
-
-    /*
-      Varsayılan olarak görevi
-      listenin sonuna koyuyoruz.
-    */
 
     let targetOrder =
       remainingTasks.length;
 
-    /*
-      Bırakılan Y konumuna göre hangi
-      kartın üstünde/önünde olduğumuzu
-      buluyoruz.
-    */
-
     for (
       let index = 0;
       index <
-        tasksWithLayout.length;
+      tasksWithLayout.length;
       index++
     ) {
       const currentTask =
         tasksWithLayout[index];
 
       const taskCenterY =
-        currentTask.layout.y +
-        currentTask.layout.height /
+        currentTask.layout!.y +
+        currentTask.layout!.height /
           2;
 
       if (
@@ -491,12 +507,6 @@ export default function BoardDetailScreen() {
         break;
       }
     }
-
-    /*
-      Görev zaten aynı kolondaysa,
-      eski sırası ile yeni sırası
-      aynıysa gereksiz API isteği yapma.
-    */
 
     if (
       task.listId ===
@@ -588,7 +598,10 @@ export default function BoardDetailScreen() {
     list: List
   ) => {
     const listTasks =
-      getTasksForList(list);
+      getTasksForList(
+        list,
+        false
+      );
 
     const message =
       listTasks.length > 0
@@ -655,7 +668,10 @@ export default function BoardDetailScreen() {
     list: List
   ) => {
     const listTasks =
-      getTasksForList(list);
+      getTasksForList(
+        list,
+        true
+      );
 
     return (
       <View
@@ -663,7 +679,13 @@ export default function BoardDetailScreen() {
         style={styles.columnWrapper}
       >
         <View
-          style={styles.column}
+          style={[
+            styles.column,
+            {
+              backgroundColor:
+                colors.card,
+            },
+          ]}
         >
           <View
             style={
@@ -671,9 +693,12 @@ export default function BoardDetailScreen() {
             }
           >
             <Text
-              style={
-                styles.columnTitle
-              }
+              style={[
+                styles.columnTitle,
+                {
+                  color: colors.text,
+                },
+              ]}
             >
               {list.title}
             </Text>
@@ -743,11 +768,19 @@ export default function BoardDetailScreen() {
               )
             ) : (
               <Text
-                style={
-                  styles.emptyText
-                }
+                style={[
+                  styles.emptyText,
+                  {
+                    color:
+                      colors.secondaryText,
+                  },
+                ]}
               >
-                Görev bulunmuyor.
+                {searchQuery.trim() ||
+                priorityFilter !==
+                  'ALL'
+                  ? 'Filtreye uygun görev bulunmuyor.'
+                  : 'Görev bulunmuyor.'}
               </Text>
             )}
           </View>
@@ -758,10 +791,22 @@ export default function BoardDetailScreen() {
 
   return (
     <GestureHandlerRootView
-      style={styles.root}
+      style={[
+        styles.root,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
     >
       <View
-        style={styles.header}
+        style={[
+          styles.header,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
       >
         <View
           style={
@@ -769,7 +814,12 @@ export default function BoardDetailScreen() {
           }
         >
           <Text
-            style={styles.title}
+            style={[
+              styles.title,
+              {
+                color: colors.text,
+              },
+            ]}
           >
             {boardName ||
               'Pano'}
@@ -777,13 +827,184 @@ export default function BoardDetailScreen() {
 
           {description ? (
             <Text
-              style={
-                styles.description
-              }
+              style={[
+                styles.description,
+                {
+                  color:
+                    colors.secondaryText,
+                },
+              ]}
             >
               {description}
             </Text>
           ) : null}
+
+          <TextInput
+            style={[
+              styles.searchInput,
+              {
+                color: colors.text,
+                borderColor:
+                  colors.border,
+                backgroundColor:
+                  colors.input,
+              },
+            ]}
+            placeholder="Görev ara..."
+            placeholderTextColor={
+              colors.secondaryText
+            }
+            value={searchQuery}
+            onChangeText={
+              setSearchQuery
+            }
+          />
+
+          <View
+            style={
+              styles.filterRow
+            }
+          >
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                {
+                  borderColor:
+                    colors.border,
+                  backgroundColor:
+                    colors.input,
+                },
+                priorityFilter ===
+                  'ALL' &&
+                  styles.activeFilterButton,
+              ]}
+              onPress={() =>
+                setPriorityFilter(
+                  'ALL'
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  {
+                    color:
+                      colors.text,
+                  },
+                  priorityFilter ===
+                    'ALL' &&
+                    styles.activeFilterButtonText,
+                ]}
+              >
+                Tümü
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                {
+                  borderColor:
+                    colors.border,
+                  backgroundColor:
+                    colors.input,
+                },
+                priorityFilter ===
+                  'LOW' &&
+                  styles.activeFilterButton,
+              ]}
+              onPress={() =>
+                setPriorityFilter(
+                  'LOW'
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  {
+                    color:
+                      colors.text,
+                  },
+                  priorityFilter ===
+                    'LOW' &&
+                    styles.activeFilterButtonText,
+                ]}
+              >
+                Düşük
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                {
+                  borderColor:
+                    colors.border,
+                  backgroundColor:
+                    colors.input,
+                },
+                priorityFilter ===
+                  'MEDIUM' &&
+                  styles.activeFilterButton,
+              ]}
+              onPress={() =>
+                setPriorityFilter(
+                  'MEDIUM'
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  {
+                    color:
+                      colors.text,
+                  },
+                  priorityFilter ===
+                    'MEDIUM' &&
+                    styles.activeFilterButtonText,
+                ]}
+              >
+                Orta
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                {
+                  borderColor:
+                    colors.border,
+                  backgroundColor:
+                    colors.input,
+                },
+                priorityFilter ===
+                  'HIGH' &&
+                  styles.activeFilterButton,
+              ]}
+              onPress={() =>
+                setPriorityFilter(
+                  'HIGH'
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  {
+                    color:
+                      colors.text,
+                  },
+                  priorityFilter ===
+                    'HIGH' &&
+                    styles.activeFilterButtonText,
+                ]}
+              >
+                Yüksek
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <View
             style={
@@ -842,19 +1063,30 @@ export default function BoardDetailScreen() {
       </View>
 
       <View
-        style={styles.boardArea}
+        style={[
+          styles.boardArea,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
       >
         {loading ? (
           <ActivityIndicator
             size="large"
+            color={colors.primary}
             style={styles.loading}
           />
         ) : lists.length ===
           0 ? (
           <Text
-            style={
-              styles.emptyText
-            }
+            style={[
+              styles.emptyText,
+              {
+                color:
+                  colors.secondaryText,
+              },
+            ]}
           >
             Bu panoda henüz
             kolon bulunmuyor.
@@ -900,13 +1132,9 @@ export default function BoardDetailScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor:
-      '#fff',
   },
 
   header: {
-    backgroundColor:
-      '#fff',
     zIndex: 10,
   },
 
@@ -924,8 +1152,44 @@ const styles = StyleSheet.create({
 
   description: {
     fontSize: 15,
-    color: '#666',
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+
+  searchInput: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    marginBottom: 10,
+  },
+
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 15,
+  },
+
+  filterButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 9,
+    alignItems: 'center',
+  },
+
+  activeFilterButton: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+
+  filterButtonText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+
+  activeFilterButtonText: {
+    color: '#fff',
   },
 
   topButtons: {
@@ -982,8 +1246,6 @@ const styles = StyleSheet.create({
   },
 
   column: {
-    backgroundColor:
-      '#f5f5f5',
     borderRadius: 10,
     padding: 15,
     minHeight: 500,
@@ -1044,7 +1306,6 @@ const styles = StyleSheet.create({
 
   emptyText: {
     fontSize: 14,
-    color: '#999',
     marginTop: 2,
   },
 

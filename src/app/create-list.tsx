@@ -1,44 +1,68 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  useLocalSearchParams,
+  useRouter,
+} from 'expo-router';
+
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
+
 import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 export default function CreateListScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const { boardId } = useLocalSearchParams<{
-    boardId?: string;
-  }>();
+  const { boardId } =
+    useLocalSearchParams<{
+      boardId?: string;
+    }>();
 
-  const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [title, setTitle] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(false);
 
   const createList = async () => {
     if (!title.trim()) {
-      Alert.alert('Hata', 'Kolon adı boş bırakılamaz.');
+      Alert.alert(
+        'Hata',
+        'Kolon adı boş bırakılamaz.'
+      );
       return;
     }
 
     if (!boardId) {
-      Alert.alert('Hata', 'Pano bulunamadı.');
+      Alert.alert(
+        'Hata',
+        'Pano bulunamadı.'
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      const token = await SecureStore.getItemAsync('token');
+      const token =
+        await SecureStore.getItemAsync(
+          'token'
+        );
 
       if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
+        Alert.alert(
+          'Hata',
+          'Oturum bulunamadı.'
+        );
         router.replace('/');
         return;
       }
@@ -48,7 +72,8 @@ export default function CreateListScreen() {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':
+              'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
@@ -57,12 +82,14 @@ export default function CreateListScreen() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         Alert.alert(
           'Kolon oluşturulamadı',
-          data.message || 'Bir hata oluştu.'
+          data.message ||
+            'Bir hata oluştu.'
         );
         return;
       }
@@ -73,7 +100,8 @@ export default function CreateListScreen() {
         [
           {
             text: 'Tamam',
-            onPress: () => router.back(),
+            onPress: () =>
+              router.back(),
           },
         ]
       );
@@ -90,19 +118,52 @@ export default function CreateListScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Yeni Kolon Oluştur
       </Text>
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Kolon Adı
       </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         placeholder="Kolon adını girin"
-        placeholderTextColor="#999"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         value={title}
         onChangeText={setTitle}
         maxLength={50}
@@ -127,7 +188,14 @@ export default function CreateListScreen() {
         onPress={() => router.back()}
         disabled={loading}
       >
-        <Text style={styles.cancelButtonText}>
+        <Text
+          style={[
+            styles.cancelButtonText,
+            {
+              color: colors.primary,
+            },
+          ]}
+        >
           İptal
         </Text>
       </TouchableOpacity>
@@ -138,7 +206,6 @@ export default function CreateListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 25,
     paddingTop: 60,
   },
@@ -158,7 +225,6 @@ const styles = StyleSheet.create({
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
@@ -167,7 +233,8 @@ const styles = StyleSheet.create({
 
   createButton: {
     height: 55,
-    backgroundColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -188,7 +255,6 @@ const styles = StyleSheet.create({
   },
 
   cancelButtonText: {
-    color: '#007AFF',
     fontSize: 16,
   },
 });

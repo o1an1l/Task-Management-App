@@ -23,6 +23,7 @@ export type Task = {
   title: string;
   description?: string | null;
   status: string;
+  priority: string;
   order: number;
   createdAt: string;
   boardId: number;
@@ -66,7 +67,6 @@ export default function DraggableTaskCard({
   const translateY = useSharedValue(0);
   const isDragging = useSharedValue(false);
 
-  // Sürükleme başladığındaki scroll konumu
   const startScrollX = useSharedValue(0);
 
   const cardRef = useRef<any>(null);
@@ -99,20 +99,59 @@ export default function DraggableTaskCard({
     );
   };
 
+  const getPriorityText = () => {
+    switch (task.priority) {
+      case 'LOW':
+        return 'DÜŞÜK';
+
+      case 'HIGH':
+        return 'YÜKSEK';
+
+      case 'MEDIUM':
+      default:
+        return 'ORTA';
+    }
+  };
+
+  const getPriorityStyle = () => {
+    switch (task.priority) {
+      case 'LOW':
+        return styles.lowPriority;
+
+      case 'HIGH':
+        return styles.highPriority;
+
+      case 'MEDIUM':
+      default:
+        return styles.mediumPriority;
+    }
+  };
+
+  const getPriorityTextStyle = () => {
+    switch (task.priority) {
+      case 'MEDIUM':
+        return styles.mediumPriorityText;
+
+      case 'LOW':
+      case 'HIGH':
+      default:
+        return styles.lightPriorityText;
+    }
+  };
+
   const panGesture = Gesture.Pan()
     .activateAfterLongPress(300)
 
     .onBegin(() => {
       isDragging.value = true;
 
-      // Sürükleme başladığı andaki scroll konumunu kaydet
-      startScrollX.value = scrollX.value;
+      startScrollX.value =
+        scrollX.value;
 
       runOnJS(setDragging)(true);
     })
 
     .onUpdate((event) => {
-      // Parmak hareketi + ScrollView'in hareketi
       translateX.value =
         event.translationX +
         (scrollX.value -
@@ -125,10 +164,10 @@ export default function DraggableTaskCard({
       const edgeThreshold = 70;
       const scrollStep = 8;
 
-      // Sağ kenara gelince otomatik kaydır
       if (
         event.absoluteX >
-        screenWidth - edgeThreshold
+        screenWidth -
+          edgeThreshold
       ) {
         const nextScrollX =
           scrollX.value +
@@ -143,10 +182,7 @@ export default function DraggableTaskCard({
           0,
           false
         );
-      }
-
-      // Sol kenara gelince otomatik kaydır
-      else if (
+      } else if (
         event.absoluteX <
         edgeThreshold
       ) {
@@ -261,6 +297,16 @@ export default function DraggableTaskCard({
               {task.description}
             </Text>
           ) : null}
+
+          <Text
+            style={[
+              styles.priorityBadge,
+              getPriorityStyle(),
+              getPriorityTextStyle(),
+            ]}
+          >
+            {getPriorityText()}
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     </GestureDetector>
@@ -289,5 +335,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginTop: 5,
+  },
+
+  priorityBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+
+  lowPriority: {
+    backgroundColor: '#34C759',
+  },
+
+  mediumPriority: {
+    backgroundColor: '#FFC107',
+  },
+
+  highPriority: {
+    backgroundColor: '#D32F2F',
+  },
+
+  lightPriorityText: {
+    color: '#fff',
+  },
+
+  mediumPriorityText: {
+    color: '#222',
   },
 });

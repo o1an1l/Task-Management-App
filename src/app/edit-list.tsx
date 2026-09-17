@@ -1,86 +1,110 @@
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from 'expo-router';
+
 import * as SecureStore from 'expo-secure-store';
-import { useCallback, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  useCallback,
+  useState,
+} from 'react';
+
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
-type List = {
-  id: number;
-  title: string;
-  order: number;
-  createdAt: string;
-  boardId: number;
-};
+import { useTheme } from '@/context/ThemeContext';
 
 export default function EditListScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const { listId } = useLocalSearchParams<{
-    listId?: string;
-  }>();
+  const { listId } =
+    useLocalSearchParams<{
+      listId?: string;
+    }>();
 
-  const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [title, setTitle] =
+    useState('');
 
-  const fetchList = useCallback(async () => {
-    try {
-      const token = await SecureStore.getItemAsync('token');
+  const [loading, setLoading] =
+    useState(true);
 
-      if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
-        router.replace('/');
-        return;
-      }
+  const [saving, setSaving] =
+    useState(false);
 
-      if (!listId) {
-        Alert.alert('Hata', 'Kolon bilgisi bulunamadı.');
-        return;
-      }
+  const fetchList = useCallback(
+    async () => {
+      try {
+        const token =
+          await SecureStore.getItemAsync(
+            'token'
+          );
 
-      const response = await fetch(
-        `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        if (!token) {
+          Alert.alert(
+            'Hata',
+            'Oturum bulunamadı.'
+          );
+          router.replace('/');
+          return;
         }
-      );
 
-      const data = await response.json();
+        if (!listId) {
+          Alert.alert(
+            'Hata',
+            'Kolon bilgisi bulunamadı.'
+          );
+          return;
+        }
 
-      if (!response.ok) {
-        Alert.alert(
-          'Hata',
-          data.message || 'Kolon bilgisi alınamadı.'
+        const response =
+          await fetch(
+            `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          Alert.alert(
+            'Hata',
+            data.message ||
+              'Kolon bilgisi alınamadı.'
+          );
+          return;
+        }
+
+        setTitle(
+          data.list.title
         );
-        return;
+      } catch (error) {
+        console.error(error);
+
+        Alert.alert(
+          'Bağlantı hatası',
+          'Backend sunucusuna bağlanılamadı.'
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setTitle(data.list.title);
-    } catch (error) {
-      console.error(error);
-
-      Alert.alert(
-        'Bağlantı hatası',
-        'Backend sunucusuna bağlanılamadı.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [listId, router]);
+    },
+    [listId, router]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -100,7 +124,10 @@ export default function EditListScreen() {
     try {
       setSaving(true);
 
-      const token = await SecureStore.getItemAsync('token');
+      const token =
+        await SecureStore.getItemAsync(
+          'token'
+        );
 
       if (!token) {
         Alert.alert(
@@ -110,26 +137,31 @@ export default function EditListScreen() {
         return;
       }
 
-      const response = await fetch(
-        `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: title.trim(),
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `https://task-management-app-xc7f.onrender.com/lists/${listId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type':
+                'application/json',
+              Authorization:
+                `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              title: title.trim(),
+            }),
+          }
+        );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         Alert.alert(
           'Hata',
-          data.message || 'Kolon güncellenemedi.'
+          data.message ||
+            'Kolon güncellenemedi.'
         );
         return;
       }
@@ -140,7 +172,8 @@ export default function EditListScreen() {
         [
           {
             text: 'Tamam',
-            onPress: () => router.back(),
+            onPress: () =>
+              router.back(),
           },
         ]
       );
@@ -158,10 +191,28 @@ export default function EditListScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
 
-        <Text style={styles.loadingText}>
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Kolon yükleniyor...
         </Text>
       </View>
@@ -169,20 +220,54 @@ export default function EditListScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Kolon Düzenle
       </Text>
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Kolon Adı
       </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         value={title}
         onChangeText={setTitle}
         placeholder="Kolon adını girin"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         maxLength={50}
       />
 
@@ -216,7 +301,6 @@ export default function EditListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 25,
     paddingTop: 60,
   },
@@ -247,7 +331,6 @@ const styles = StyleSheet.create({
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
@@ -256,7 +339,8 @@ const styles = StyleSheet.create({
 
   saveButton: {
     height: 55,
-    backgroundColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -268,7 +352,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
-    backgroundColor: '#333',
+    backgroundColor:
+      '#333',
     borderRadius: 10,
   },
 

@@ -3,14 +3,17 @@ import * as SecureStore from 'expo-secure-store';
 import { useCallback, useState } from 'react';
 
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Board = {
   id: number;
@@ -22,6 +25,8 @@ type Board = {
 
 export default function BoardListScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,8 +61,7 @@ export default function BoardListScreen() {
       if (!response.ok) {
         Alert.alert(
           'Hata',
-          data.message ||
-            'Panolar alınamadı.'
+          data.message || 'Panolar alınamadı.'
         );
         return;
       }
@@ -81,14 +85,10 @@ export default function BoardListScreen() {
     }, [fetchBoards])
   );
 
-  const deleteBoard = async (
-    boardId: number
-  ) => {
+  const deleteBoard = async (boardId: number) => {
     try {
       const token =
-        await SecureStore.getItemAsync(
-          'token'
-        );
+        await SecureStore.getItemAsync('token');
 
       if (!token) {
         Alert.alert(
@@ -103,20 +103,17 @@ export default function BoardListScreen() {
         {
           method: 'DELETE',
           headers: {
-            Authorization:
-              `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         Alert.alert(
           'Hata',
-          data.message ||
-            'Pano silinemedi.'
+          data.message || 'Pano silinemedi.'
         );
         return;
       }
@@ -137,9 +134,7 @@ export default function BoardListScreen() {
     }
   };
 
-  const confirmDeleteBoard = (
-    board: Board
-  ) => {
+  const confirmDeleteBoard = (board: Board) => {
     Alert.alert(
       'Panoyu Sil',
       `"${board.name}" panosunu silmek istediğine emin misin?`,
@@ -159,8 +154,24 @@ export default function BoardListScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          paddingTop: insets.top + 20,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Panolarım
       </Text>
 
@@ -168,9 +179,7 @@ export default function BoardListScreen() {
         style={styles.logoutButton}
         onPress={handleLogout}
       >
-        <Text
-          style={styles.logoutButtonText}
-        >
+        <Text style={styles.logoutButtonText}>
           Çıkış Yap
         </Text>
       </TouchableOpacity>
@@ -189,76 +198,91 @@ export default function BoardListScreen() {
       {loading ? (
         <ActivityIndicator
           size="large"
+          color={colors.primary}
           style={styles.loading}
         />
       ) : boards.length === 0 ? (
-        <Text style={styles.emptyText}>
-          Henüz oluşturulmuş bir panonuz
-          yok.
+        <Text
+          style={[
+            styles.emptyText,
+            {
+              color: colors.secondaryText,
+            },
+          ]}
+        >
+          Henüz oluşturulmuş bir panonuz yok.
         </Text>
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={true}
-          contentContainerStyle={
-            styles.boardList
-          }
+          contentContainerStyle={styles.boardList}
         >
           {boards.map((board) => (
             <View
               key={board.id}
-              style={styles.boardCard}
+              style={[
+                styles.boardCard,
+                {
+                  backgroundColor: colors.card,
+                },
+              ]}
             >
               <TouchableOpacity
                 onPress={() =>
                   router.push({
-                    pathname:
-                      '/board-detail',
+                    pathname: '/board-detail',
                     params: {
                       boardId:
                         board.id.toString(),
                       boardName:
                         board.name,
                       description:
-                        board.description ||
-                        '',
+                        board.description || '',
                     },
                   })
                 }
               >
                 <Text
-                  style={
-                    styles.boardTitle
-                  }
+                  style={[
+                    styles.boardTitle,
+                    {
+                      color: colors.text,
+                    },
+                  ]}
                 >
                   {board.name}
                 </Text>
 
                 {board.description ? (
                   <Text
-                    style={
-                      styles.boardDescription
-                    }
+                    style={[
+                      styles.boardDescription,
+                      {
+                        color:
+                          colors.secondaryText,
+                      },
+                    ]}
                   >
                     {board.description}
                   </Text>
                 ) : (
                   <Text
-                    style={
-                      styles.boardDescription
-                    }
+                    style={[
+                      styles.boardDescription,
+                      {
+                        color:
+                          colors.secondaryText,
+                      },
+                    ]}
                   >
                     Açıklama bulunmuyor.
                   </Text>
                 )}
               </TouchableOpacity>
 
-              <View
-                style={styles.buttonRow}
-              >
+              <View style={styles.buttonRow}>
                 <TouchableOpacity
-                  style={
-                    styles.editButton
-                  }
+                  style={styles.editButton}
                   onPress={() =>
                     router.push({
                       pathname:
@@ -270,30 +294,18 @@ export default function BoardListScreen() {
                     })
                   }
                 >
-                  <Text
-                    style={
-                      styles.buttonText
-                    }
-                  >
+                  <Text style={styles.buttonText}>
                     Düzenle
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={
-                    styles.deleteButton
-                  }
+                  style={styles.deleteButton}
                   onPress={() =>
-                    confirmDeleteBoard(
-                      board
-                    )
+                    confirmDeleteBoard(board)
                   }
                 >
-                  <Text
-                    style={
-                      styles.buttonText
-                    }
-                  >
+                  <Text style={styles.buttonText}>
                     Sil
                   </Text>
                 </TouchableOpacity>
@@ -309,9 +321,7 @@ export default function BoardListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-    paddingTop: 60,
+    paddingHorizontal: 20,
   },
 
   title: {
@@ -338,7 +348,6 @@ const styles = StyleSheet.create({
   },
 
   boardCard: {
-    backgroundColor: '#f5f5f5',
     borderRadius: 10,
     padding: 18,
     marginTop: 20,
@@ -352,7 +361,6 @@ const styles = StyleSheet.create({
 
   boardDescription: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 15,
   },
 
@@ -401,7 +409,6 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     marginTop: 30,
-    color: '#666',
     fontSize: 15,
   },
 });

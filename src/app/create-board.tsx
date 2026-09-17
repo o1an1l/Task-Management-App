@@ -1,35 +1,53 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
+
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 export default function CreateBoardScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const [boardName, setBoardName] = useState('');
-  const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [boardName, setBoardName] =
+    useState('');
+
+  const [description, setDescription] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(false);
 
   const createBoard = async () => {
     if (boardName.trim() === '') {
-      Alert.alert('Hata', 'Pano adı boş bırakılamaz.');
+      Alert.alert(
+        'Hata',
+        'Pano adı boş bırakılamaz.'
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      const token = await SecureStore.getItemAsync('token');
+      const token =
+        await SecureStore.getItemAsync(
+          'token'
+        );
 
       if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
+        Alert.alert(
+          'Hata',
+          'Oturum bulunamadı.'
+        );
         router.replace('/');
         return;
       }
@@ -39,22 +57,26 @@ export default function CreateBoardScreen() {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':
+              'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             name: boardName.trim(),
-            description: description.trim(),
+            description:
+              description.trim(),
           }),
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         Alert.alert(
           'Pano oluşturulamadı',
-          data.message || 'Bir hata oluştu.'
+          data.message ||
+            'Bir hata oluştu.'
         );
         return;
       }
@@ -65,7 +87,10 @@ export default function CreateBoardScreen() {
         [
           {
             text: 'Tamam',
-            onPress: () => router.replace('/(tabs)/boards'),
+            onPress: () =>
+              router.replace(
+                '/(tabs)/boards'
+              ),
           },
         ]
       );
@@ -82,25 +107,83 @@ export default function CreateBoardScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Yeni Pano Oluştur</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Yeni Pano Oluştur
+      </Text>
 
-      <Text style={styles.label}>Pano Adı</Text>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Pano Adı
+      </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         placeholder="Pano adını girin"
-        placeholderTextColor="#999"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         value={boardName}
         onChangeText={setBoardName}
       />
 
-      <Text style={styles.label}>Açıklama</Text>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Açıklama
+      </Text>
 
       <TextInput
-        style={[styles.input, styles.descriptionInput]}
+        style={[
+          styles.input,
+          styles.descriptionInput,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         placeholder="Pano açıklaması (isteğe bağlı)"
-        placeholderTextColor="#999"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         multiline
         value={description}
         onChangeText={setDescription}
@@ -112,7 +195,9 @@ export default function CreateBoardScreen() {
         disabled={loading}
       >
         <Text style={styles.createButtonText}>
-          {loading ? 'Oluşturuluyor...' : 'Pano Oluştur'}
+          {loading
+            ? 'Oluşturuluyor...'
+            : 'Pano Oluştur'}
         </Text>
       </TouchableOpacity>
 
@@ -121,7 +206,14 @@ export default function CreateBoardScreen() {
         onPress={() => router.back()}
         disabled={loading}
       >
-        <Text style={styles.cancelButtonText}>
+        <Text
+          style={[
+            styles.cancelButtonText,
+            {
+              color: colors.primary,
+            },
+          ]}
+        >
           İptal
         </Text>
       </TouchableOpacity>
@@ -132,7 +224,6 @@ export default function CreateBoardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 25,
     paddingTop: 60,
   },
@@ -152,7 +243,6 @@ const styles = StyleSheet.create({
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
@@ -167,7 +257,8 @@ const styles = StyleSheet.create({
 
   createButton: {
     height: 55,
-    backgroundColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -188,7 +279,6 @@ const styles = StyleSheet.create({
   },
 
   cancelButtonText: {
-    color: '#007AFF',
     fontSize: 16,
   },
 });

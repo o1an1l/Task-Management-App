@@ -2,22 +2,34 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordAgain, setPasswordAgain] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [name, setName] =
+    useState('');
+
+  const [email, setEmail] =
+    useState('');
+
+  const [password, setPassword] =
+    useState('');
+
+  const [passwordAgain, setPasswordAgain] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(false);
 
   const handleRegister = async () => {
     if (
@@ -36,7 +48,11 @@ export default function RegisterScreen() {
     const emailRegex =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email.trim())) {
+    if (
+      !emailRegex.test(
+        email.trim()
+      )
+    ) {
       Alert.alert(
         'Hata',
         'Geçerli bir e-posta adresi girin.'
@@ -52,7 +68,10 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (password !== passwordAgain) {
+    if (
+      password !==
+      passwordAgain
+    ) {
       Alert.alert(
         'Hata',
         'Şifreler eşleşmiyor.'
@@ -63,24 +82,26 @@ export default function RegisterScreen() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        'https://task-management-app-xc7f.onrender.com/auth/register',
-        {
-          method: 'POST',
+      const response =
+        await fetch(
+          'https://task-management-app-xc7f.onrender.com/auth/register',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              name: name.trim(),
+              email:
+                email.trim(),
+              password,
+            }),
+          }
+        );
 
-          headers: {
-            'Content-Type': 'application/json',
-          },
-
-          body: JSON.stringify({
-            name: name.trim(),
-            email: email.trim(),
-            password,
-          }),
-        }
-      );
-
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         Alert.alert(
@@ -97,7 +118,8 @@ export default function RegisterScreen() {
         [
           {
             text: 'Giriş Yap',
-            onPress: () => router.replace('/'),
+            onPress: () =>
+              router.replace('/'),
           },
         ]
       );
@@ -114,74 +136,176 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
       <View style={styles.content}>
-        <Text style={styles.title}>
+        <Text
+          style={[
+            styles.title,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Hesap Oluştur
         </Text>
 
-        <Text style={styles.subtitle}>
+        <Text
+          style={[
+            styles.subtitle,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
+        >
           Yeni hesabınızı oluşturun
         </Text>
 
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              borderColor:
+                colors.border,
+              backgroundColor:
+                colors.input,
+            },
+          ]}
           placeholder="Ad Soyad"
-          placeholderTextColor="#999"
+          placeholderTextColor={
+            colors.secondaryText
+          }
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
         />
 
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              borderColor:
+                colors.border,
+              backgroundColor:
+                colors.input,
+            },
+          ]}
           placeholder="E-posta"
-          placeholderTextColor="#999"
+          placeholderTextColor={
+            colors.secondaryText
+          }
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={
+            setEmail
+          }
         />
 
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              borderColor:
+                colors.border,
+              backgroundColor:
+                colors.input,
+            },
+          ]}
           placeholder="Şifre"
-          placeholderTextColor="#999"
+          placeholderTextColor={
+            colors.secondaryText
+          }
           secureTextEntry
           value={password}
-          onChangeText={setPassword}
+          onChangeText={
+            setPassword
+          }
         />
 
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              borderColor:
+                colors.border,
+              backgroundColor:
+                colors.input,
+            },
+          ]}
           placeholder="Şifre Tekrar"
-          placeholderTextColor="#999"
+          placeholderTextColor={
+            colors.secondaryText
+          }
           secureTextEntry
           value={passwordAgain}
-          onChangeText={setPasswordAgain}
+          onChangeText={
+            setPasswordAgain
+          }
         />
 
         <TouchableOpacity
-          style={styles.registerButton}
+          style={
+            styles.registerButton
+          }
           onPress={handleRegister}
           disabled={loading}
         >
-          <Text style={styles.registerButtonText}>
+          <Text
+            style={
+              styles.registerButtonText
+            }
+          >
             {loading
               ? 'Kayıt yapılıyor...'
               : 'Kayıt Ol'}
           </Text>
         </TouchableOpacity>
 
-        <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>
+        <View
+          style={
+            styles.loginContainer
+          }
+        >
+          <Text
+            style={[
+              styles.loginText,
+              {
+                color:
+                  colors.secondaryText,
+              },
+            ]}
+          >
             Zaten hesabınız var mı?
           </Text>
 
-          <Link href="/" asChild>
+          <Link
+            href="/"
+            asChild
+          >
             <TouchableOpacity>
-              <Text style={styles.loginLink}>
+              <Text
+                style={[
+                  styles.loginLink,
+                  {
+                    color:
+                      colors.primary,
+                  },
+                ]}
+              >
                 Giriş Yap
               </Text>
             </TouchableOpacity>
@@ -195,7 +319,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     justifyContent: 'center',
   },
 
@@ -212,7 +335,6 @@ const styles = StyleSheet.create({
 
   subtitle: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 35,
   },
@@ -220,7 +342,6 @@ const styles = StyleSheet.create({
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
@@ -229,7 +350,8 @@ const styles = StyleSheet.create({
 
   registerButton: {
     height: 55,
-    backgroundColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -249,12 +371,10 @@ const styles = StyleSheet.create({
   },
 
   loginText: {
-    color: '#666',
     fontSize: 15,
   },
 
   loginLink: {
-    color: '#007AFF',
     fontSize: 15,
     fontWeight: 'bold',
   },

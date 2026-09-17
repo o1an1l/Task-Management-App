@@ -1,21 +1,30 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
+
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from 'expo-router';
+
 import * as SecureStore from 'expo-secure-store';
-import { useCallback, useState } from 'react';
+
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  useCallback,
+  useState,
+} from 'react';
+
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 type List = {
   id: number;
@@ -33,129 +42,185 @@ type User = {
 
 export default function CreateTaskScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const { boardId } = useLocalSearchParams<{
-    boardId?: string;
-  }>();
+  const { boardId } =
+    useLocalSearchParams<{
+      boardId?: string;
+    }>();
 
-  const [lists, setLists] = useState<List[]>([]);
-  const [selectedListId, setSelectedListId] = useState<number | null>(
-    null
+  const [lists, setLists] =
+    useState<List[]>([]);
+
+  const [
+    selectedListId,
+    setSelectedListId,
+  ] = useState<number | null>(null);
+
+  const [users, setUsers] =
+    useState<User[]>([]);
+
+  const [
+    selectedAssigneeId,
+    setSelectedAssigneeId,
+  ] = useState<number | null>(null);
+
+  const [title, setTitle] =
+    useState('');
+
+  const [description, setDescription] =
+    useState('');
+
+  const [priority, setPriority] =
+    useState('MEDIUM');
+
+  const [dueDate, setDueDate] =
+    useState<Date | null>(null);
+
+  const [showDatePicker, setShowDatePicker] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [loadingLists, setLoadingLists] =
+    useState(true);
+
+  const [loadingUsers, setLoadingUsers] =
+    useState(true);
+
+  const fetchLists = useCallback(
+    async () => {
+      try {
+        const token =
+          await SecureStore.getItemAsync(
+            'token'
+          );
+
+        if (!token) {
+          Alert.alert(
+            'Hata',
+            'Oturum bulunamadı.'
+          );
+          router.replace('/');
+          return;
+        }
+
+        if (!boardId) {
+          Alert.alert(
+            'Hata',
+            'Pano bulunamadı.'
+          );
+          return;
+        }
+
+        const response =
+          await fetch(
+            `https://task-management-app-xc7f.onrender.com/lists/board/${boardId}`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          Alert.alert(
+            'Hata',
+            data.message ||
+              'Kolonlar alınamadı.'
+          );
+          return;
+        }
+
+        const sortedLists =
+          [...data.lists].sort(
+            (
+              a: List,
+              b: List
+            ) =>
+              a.order - b.order
+          );
+
+        setLists(sortedLists);
+
+        if (
+          sortedLists.length >
+          0
+        ) {
+          setSelectedListId(
+            sortedLists[0].id
+          );
+        }
+      } catch (error) {
+        console.error(error);
+
+        Alert.alert(
+          'Bağlantı hatası',
+          'Backend sunucusuna bağlanılamadı.'
+        );
+      } finally {
+        setLoadingLists(false);
+      }
+    },
+    [boardId, router]
   );
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedAssigneeId, setSelectedAssigneeId] = useState<number | null>(
-    null
-  );
+  const fetchUsers =
+    useCallback(async () => {
+      try {
+        const token =
+          await SecureStore.getItemAsync(
+            'token'
+          );
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-
-  const [priority, setPriority] = useState('MEDIUM');
-
-  const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const [loading, setLoading] = useState(false);
-  const [loadingLists, setLoadingLists] = useState(true);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-
-  const fetchLists = useCallback(async () => {
-    try {
-      const token = await SecureStore.getItemAsync('token');
-
-      if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
-        router.replace('/');
-        return;
-      }
-
-      if (!boardId) {
-        Alert.alert('Hata', 'Pano bulunamadı.');
-        return;
-      }
-
-      const response = await fetch(
-        `https://task-management-app-xc7f.onrender.com/lists/board/${boardId}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        if (!token) {
+          return;
         }
-      );
 
-      const data = await response.json();
+        const response =
+          await fetch(
+            'https://task-management-app-xc7f.onrender.com/auth/users',
+            {
+              method: 'GET',
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
-      if (!response.ok) {
-        Alert.alert(
-          'Hata',
-          data.message || 'Kolonlar alınamadı.'
-        );
-        return;
-      }
+        const data =
+          await response.json();
 
-      const sortedLists = [...data.lists].sort(
-        (a: List, b: List) => a.order - b.order
-      );
-
-      setLists(sortedLists);
-
-      if (sortedLists.length > 0) {
-        setSelectedListId(sortedLists[0].id);
-      }
-    } catch (error) {
-      console.error(error);
-
-      Alert.alert(
-        'Bağlantı hatası',
-        'Backend sunucusuna bağlanılamadı.'
-      );
-    } finally {
-      setLoadingLists(false);
-    }
-  }, [boardId, router]);
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      const token = await SecureStore.getItemAsync('token');
-
-      if (!token) {
-        return;
-      }
-
-      const response = await fetch(
-        'https://task-management-app-xc7f.onrender.com/auth/users',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        if (!response.ok) {
+          Alert.alert(
+            'Hata',
+            data.message ||
+              'Kullanıcılar alınamadı.'
+          );
+          return;
         }
-      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        Alert.alert(
-          'Hata',
-          data.message || 'Kullanıcılar alınamadı.'
+        setUsers(
+          data.users || []
         );
-        return;
+      } catch (error) {
+        console.error(error);
+
+        Alert.alert(
+          'Bağlantı hatası',
+          'Kullanıcılar alınamadı.'
+        );
+      } finally {
+        setLoadingUsers(false);
       }
-
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error(error);
-
-      Alert.alert(
-        'Bağlantı hatası',
-        'Kullanıcılar alınamadı.'
-      );
-    } finally {
-      setLoadingUsers(false);
-    }
-  }, []);
+    }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -171,10 +236,22 @@ export default function CreateTaskScreen() {
     setShowDatePicker(false);
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
-    const selectedDay = new Date(selectedDate);
-    selectedDay.setHours(0, 0, 0, 0);
+    const selectedDay =
+      new Date(selectedDate);
+
+    selectedDay.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
     if (selectedDay < today) {
       Alert.alert(
@@ -188,8 +265,11 @@ export default function CreateTaskScreen() {
   };
 
   const createTask = async () => {
-    const trimmedTitle = title.trim();
-    const trimmedDescription = description.trim();
+    const trimmedTitle =
+      title.trim();
+
+    const trimmedDescription =
+      description.trim();
 
     if (trimmedTitle.length < 2) {
       Alert.alert(
@@ -207,7 +287,10 @@ export default function CreateTaskScreen() {
       return;
     }
 
-    if (trimmedDescription.length > 1000) {
+    if (
+      trimmedDescription.length >
+      1000
+    ) {
       Alert.alert(
         'Hata',
         'Görev açıklaması en fazla 1000 karakter olabilir.'
@@ -216,54 +299,78 @@ export default function CreateTaskScreen() {
     }
 
     if (!boardId) {
-      Alert.alert('Hata', 'Pano bulunamadı.');
+      Alert.alert(
+        'Hata',
+        'Pano bulunamadı.'
+      );
       return;
     }
 
-    if (selectedListId === null) {
-      Alert.alert('Hata', 'Lütfen bir kolon seçin.');
+    if (
+      selectedListId === null
+    ) {
+      Alert.alert(
+        'Hata',
+        'Lütfen bir kolon seçin.'
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      const token = await SecureStore.getItemAsync('token');
+      const token =
+        await SecureStore.getItemAsync(
+          'token'
+        );
 
       if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
+        Alert.alert(
+          'Hata',
+          'Oturum bulunamadı.'
+        );
         router.replace('/');
         return;
       }
 
-      const response = await fetch(
-        'https://task-management-app-xc7f.onrender.com/tasks',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            boardId: Number(boardId),
-            listId: selectedListId,
-            title: trimmedTitle,
-            description: trimmedDescription,
-            priority,
-            dueDate: dueDate
-              ? dueDate.toISOString()
-              : null,
-            assigneeId: selectedAssigneeId,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          'https://task-management-app-xc7f.onrender.com/tasks',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+              Authorization:
+                `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              boardId:
+                Number(boardId),
+              listId:
+                selectedListId,
+              title:
+                trimmedTitle,
+              description:
+                trimmedDescription,
+              priority,
+              dueDate: dueDate
+                ? dueDate.toISOString()
+                : null,
+              assigneeId:
+                selectedAssigneeId,
+            }),
+          }
+        );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         Alert.alert(
           'Görev oluşturulamadı',
-          data.message || 'Bir hata oluştu.'
+          data.message ||
+            'Bir hata oluştu.'
         );
         return;
       }
@@ -274,7 +381,8 @@ export default function CreateTaskScreen() {
         [
           {
             text: 'Tamam',
-            onPress: () => router.back(),
+            onPress: () =>
+              router.back(),
           },
         ]
       );
@@ -292,28 +400,68 @@ export default function CreateTaskScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+      contentContainerStyle={
+        styles.contentContainer
+      }
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Yeni Görev Oluştur
       </Text>
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Görev Adı
       </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         placeholder="Görev başlığı girin"
-        placeholderTextColor="#999"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         value={title}
         onChangeText={setTitle}
         maxLength={150}
       />
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Açıklama
       </Text>
 
@@ -321,46 +469,87 @@ export default function CreateTaskScreen() {
         style={[
           styles.input,
           styles.descriptionInput,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
         ]}
         placeholder="Görev açıklaması (isteğe bağlı)"
-        placeholderTextColor="#999"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         multiline
         value={description}
         onChangeText={setDescription}
         maxLength={1000}
       />
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Kolon
       </Text>
 
       {loadingLists ? (
         <ActivityIndicator
           size="small"
+          color={colors.primary}
           style={styles.listLoading}
         />
       ) : lists.length === 0 ? (
-        <Text style={styles.emptyText}>
+        <Text
+          style={[
+            styles.emptyText,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
+        >
           Bu panoda kolon bulunmuyor.
         </Text>
       ) : (
-        <View style={styles.listContainer}>
+        <View
+          style={
+            styles.listContainer
+          }
+        >
           {lists.map((list) => (
             <TouchableOpacity
               key={list.id}
               style={[
                 styles.listButton,
-                selectedListId === list.id &&
+                {
+                  borderColor:
+                    colors.border,
+                },
+                selectedListId ===
+                  list.id &&
                   styles.selectedList,
               ]}
               onPress={() =>
-                setSelectedListId(list.id)
+                setSelectedListId(
+                  list.id
+                )
               }
             >
               <Text
                 style={[
                   styles.listText,
-                  selectedListId === list.id &&
+                  {
+                    color:
+                      colors.text,
+                  },
+                  selectedListId ===
+                    list.id &&
                     styles.selectedListText,
                 ]}
               >
@@ -371,22 +560,42 @@ export default function CreateTaskScreen() {
         </View>
       )}
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Öncelik
       </Text>
 
-      <View style={styles.priorityContainer}>
+      <View
+        style={
+          styles.priorityContainer
+        }
+      >
         <TouchableOpacity
           style={[
             styles.priorityButton,
+            {
+              borderColor:
+                colors.border,
+            },
             priority === 'LOW' &&
               styles.selectedPriority,
           ]}
-          onPress={() => setPriority('LOW')}
+          onPress={() =>
+            setPriority('LOW')
+          }
         >
           <Text
             style={[
               styles.priorityText,
+              {
+                color: colors.text,
+              },
               priority === 'LOW' &&
                 styles.selectedPriorityText,
             ]}
@@ -398,14 +607,23 @@ export default function CreateTaskScreen() {
         <TouchableOpacity
           style={[
             styles.priorityButton,
+            {
+              borderColor:
+                colors.border,
+            },
             priority === 'MEDIUM' &&
               styles.selectedPriority,
           ]}
-          onPress={() => setPriority('MEDIUM')}
+          onPress={() =>
+            setPriority('MEDIUM')
+          }
         >
           <Text
             style={[
               styles.priorityText,
+              {
+                color: colors.text,
+              },
               priority === 'MEDIUM' &&
                 styles.selectedPriorityText,
             ]}
@@ -417,14 +635,23 @@ export default function CreateTaskScreen() {
         <TouchableOpacity
           style={[
             styles.priorityButton,
+            {
+              borderColor:
+                colors.border,
+            },
             priority === 'HIGH' &&
               styles.selectedPriority,
           ]}
-          onPress={() => setPriority('HIGH')}
+          onPress={() =>
+            setPriority('HIGH')
+          }
         >
           <Text
             style={[
               styles.priorityText,
+              {
+                color: colors.text,
+              },
               priority === 'HIGH' &&
                 styles.selectedPriorityText,
             ]}
@@ -434,25 +661,55 @@ export default function CreateTaskScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Son Tarih
       </Text>
 
       <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowDatePicker(true)}
+        style={[
+          styles.dateButton,
+          {
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
+        onPress={() =>
+          setShowDatePicker(true)
+        }
       >
-        <Text style={styles.dateButtonText}>
+        <Text
+          style={[
+            styles.dateButtonText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           {dueDate
-            ? dueDate.toLocaleDateString('tr-TR')
+            ? dueDate.toLocaleDateString(
+                'tr-TR'
+              )
             : 'Son tarih seçin (isteğe bağlı)'}
         </Text>
       </TouchableOpacity>
 
       {dueDate ? (
         <TouchableOpacity
-          style={styles.clearDateButton}
-          onPress={() => setDueDate(null)}
+          style={
+            styles.clearDateButton
+          }
+          onPress={() =>
+            setDueDate(null)
+          }
         >
           <Text style={styles.clearDateText}>
             Son tarihi kaldır
@@ -462,33 +719,57 @@ export default function CreateTaskScreen() {
 
       {showDatePicker ? (
         <DateTimePicker
-          value={dueDate || new Date()}
+          value={
+            dueDate || new Date()
+          }
           mode="date"
           presentation="dialog"
-          minimumDate={new Date()}
-          onValueChange={handleDateChange}
+          minimumDate={
+            new Date()
+          }
+          onValueChange={
+            handleDateChange
+          }
           onDismiss={() =>
             setShowDatePicker(false)
           }
         />
       ) : null}
 
-      <Text style={styles.label}>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
         Atanan Kişi
       </Text>
 
       <TouchableOpacity
         style={[
           styles.assigneeButton,
-          selectedAssigneeId === null &&
+          {
+            borderColor:
+              colors.border,
+          },
+          selectedAssigneeId ===
+            null &&
             styles.selectedAssignee,
         ]}
-        onPress={() => setSelectedAssigneeId(null)}
+        onPress={() =>
+          setSelectedAssigneeId(null)
+        }
       >
         <Text
           style={[
             styles.assigneeText,
-            selectedAssigneeId === null &&
+            {
+              color: colors.text,
+            },
+            selectedAssigneeId ===
+              null &&
               styles.selectedAssigneeText,
           ]}
         >
@@ -499,34 +780,60 @@ export default function CreateTaskScreen() {
       {loadingUsers ? (
         <ActivityIndicator
           size="small"
+          color={colors.primary}
           style={styles.userLoading}
         />
       ) : users.length === 0 ? (
-        <Text style={styles.emptyText}>
+        <Text
+          style={[
+            styles.emptyText,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
+        >
           Kayıtlı kullanıcı bulunmuyor.
         </Text>
       ) : (
-        <View style={styles.userContainer}>
+        <View
+          style={
+            styles.userContainer
+          }
+        >
           {users.map((user) => (
             <TouchableOpacity
               key={user.id}
               style={[
                 styles.assigneeButton,
-                selectedAssigneeId === user.id &&
+                {
+                  borderColor:
+                    colors.border,
+                },
+                selectedAssigneeId ===
+                  user.id &&
                   styles.selectedAssignee,
               ]}
               onPress={() =>
-                setSelectedAssigneeId(user.id)
+                setSelectedAssigneeId(
+                  user.id
+                )
               }
             >
               <Text
                 style={[
                   styles.assigneeText,
-                  selectedAssigneeId === user.id &&
+                  {
+                    color:
+                      colors.text,
+                  },
+                  selectedAssigneeId ===
+                    user.id &&
                     styles.selectedAssigneeText,
                 ]}
               >
-                {user.name || user.email}
+                {user.name ||
+                  user.email}
               </Text>
             </TouchableOpacity>
           ))}
@@ -556,7 +863,14 @@ export default function CreateTaskScreen() {
         onPress={() => router.back()}
         disabled={loading}
       >
-        <Text style={styles.cancelButtonText}>
+        <Text
+          style={[
+            styles.cancelButtonText,
+            {
+              color: colors.primary,
+            },
+          ]}
+        >
           İptal
         </Text>
       </TouchableOpacity>
@@ -567,7 +881,6 @@ export default function CreateTaskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 
   contentContainer: {
@@ -591,7 +904,6 @@ const styles = StyleSheet.create({
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
@@ -610,7 +922,6 @@ const styles = StyleSheet.create({
 
   listButton: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 15,
@@ -618,8 +929,10 @@ const styles = StyleSheet.create({
   },
 
   selectedList: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
+    borderColor:
+      '#007AFF',
   },
 
   listText: {
@@ -641,20 +954,20 @@ const styles = StyleSheet.create({
   priorityButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
   },
 
   selectedPriority: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
+    borderColor:
+      '#007AFF',
   },
 
   priorityText: {
     fontSize: 15,
-    color: '#333',
   },
 
   selectedPriorityText: {
@@ -664,7 +977,6 @@ const styles = StyleSheet.create({
 
   dateButton: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 15,
@@ -673,7 +985,6 @@ const styles = StyleSheet.create({
 
   dateButtonText: {
     fontSize: 15,
-    color: '#333',
   },
 
   clearDateButton: {
@@ -689,7 +1000,6 @@ const styles = StyleSheet.create({
 
   assigneeButton: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 15,
@@ -697,13 +1007,14 @@ const styles = StyleSheet.create({
   },
 
   selectedAssignee: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
+    borderColor:
+      '#007AFF',
   },
 
   assigneeText: {
     fontSize: 15,
-    color: '#333',
     textAlign: 'center',
   },
 
@@ -725,13 +1036,13 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    color: '#999',
     marginBottom: 20,
   },
 
   createButton: {
     height: 55,
-    backgroundColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -752,7 +1063,6 @@ const styles = StyleSheet.create({
   },
 
   cancelButtonText: {
-    color: '#007AFF',
     fontSize: 16,
   },
 });

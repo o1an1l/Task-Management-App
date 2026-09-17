@@ -1,23 +1,24 @@
 import {
   DarkTheme,
   DefaultTheme,
+  ThemeProvider as ExpoThemeProvider,
   Stack,
-  ThemeProvider,
 } from 'expo-router';
-
 import * as SplashScreen from 'expo-splash-screen';
 
-import { useColorScheme } from 'react-native';
-
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import {
+  ThemeProvider,
+  useTheme,
+} from '@/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function AppLayout() {
+  const { colorScheme } = useTheme();
 
   return (
-    <ThemeProvider
+    <ExpoThemeProvider
       value={
         colorScheme === 'dark'
           ? DarkTheme
@@ -83,20 +84,28 @@ export default function RootLayout() {
           }}
         />
 
-<Stack.Screen
-  name="create-board"
-  options={{
-    title: 'Yeni Pano',
-  }}
-/>
-
         <Stack.Screen
           name="edit-list"
           options={{
             title: 'Kolonu Düzenle',
           }}
         />
+
+        <Stack.Screen
+          name="create-board"
+          options={{
+            title: 'Yeni Pano',
+          }}
+        />
       </Stack>
+    </ExpoThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppLayout />
     </ThemeProvider>
   );
 }

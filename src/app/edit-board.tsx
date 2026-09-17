@@ -1,22 +1,27 @@
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from 'expo-router';
+
 import * as SecureStore from 'expo-secure-store';
+
 import {
-    useCallback,
-    useState,
+  useCallback,
+  useState,
 } from 'react';
+
 import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+import { useTheme } from '@/context/ThemeContext';
 
 type Board = {
   id: number;
@@ -28,71 +33,110 @@ type Board = {
 
 export default function EditBoardScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
-  const { boardId } = useLocalSearchParams<{
-    boardId: string;
-  }>();
+  const { boardId } =
+    useLocalSearchParams<{
+      boardId: string;
+    }>();
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] =
+    useState('');
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [description, setDescription] =
+    useState('');
 
-  const fetchBoard = useCallback(async () => {
-    try {
-      const token = await SecureStore.getItemAsync('token');
+  const [loading, setLoading] =
+    useState(true);
 
-      if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
-        router.replace('/');
-        return;
-      }
+  const [saving, setSaving] =
+    useState(false);
 
-      if (!boardId) {
-        Alert.alert('Hata', 'Pano bilgisi bulunamadı.');
-        return;
-      }
+  const fetchBoard = useCallback(
+    async () => {
+      try {
+        const token =
+          await SecureStore.getItemAsync(
+            'token'
+          );
 
-      const response = await fetch('https://task-management-app-xc7f.onrender.com/boards', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        if (!token) {
+          Alert.alert(
+            'Hata',
+            'Oturum bulunamadı.'
+          );
+          router.replace('/');
+          return;
+        }
 
-      const data = await response.json();
+        if (!boardId) {
+          Alert.alert(
+            'Hata',
+            'Pano bilgisi bulunamadı.'
+          );
+          return;
+        }
 
-      if (!response.ok) {
-        Alert.alert(
-          'Hata',
-          data.message || 'Pano bilgileri alınamadı.'
+        const response =
+          await fetch(
+            'https://task-management-app-xc7f.onrender.com/boards',
+            {
+              method: 'GET',
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          Alert.alert(
+            'Hata',
+            data.message ||
+              'Pano bilgileri alınamadı.'
+          );
+          return;
+        }
+
+        const selectedBoard =
+          data.boards.find(
+            (item: Board) =>
+              item.id ===
+              Number(boardId)
+          );
+
+        if (!selectedBoard) {
+          Alert.alert(
+            'Hata',
+            'Pano bulunamadı.'
+          );
+          return;
+        }
+
+        setName(
+          selectedBoard.name
         );
-        return;
+
+        setDescription(
+          selectedBoard.description ||
+            ''
+        );
+      } catch (error) {
+        console.error(error);
+
+        Alert.alert(
+          'Bağlantı hatası',
+          'Backend sunucusuna bağlanılamadı.'
+        );
+      } finally {
+        setLoading(false);
       }
-
-      const selectedBoard = data.boards.find(
-        (item: Board) => item.id === Number(boardId)
-      );
-
-      if (!selectedBoard) {
-        Alert.alert('Hata', 'Pano bulunamadı.');
-        return;
-      }
-
-      setName(selectedBoard.name);
-      setDescription(selectedBoard.description || '');
-    } catch (error) {
-      console.error(error);
-
-      Alert.alert(
-        'Bağlantı hatası',
-        'Backend sunucusuna bağlanılamadı.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [boardId, router]);
+    },
+    [boardId, router]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -102,41 +146,56 @@ export default function EditBoardScreen() {
 
   const updateBoard = async () => {
     if (!name.trim()) {
-      Alert.alert('Hata', 'Pano adı boş bırakılamaz.');
+      Alert.alert(
+        'Hata',
+        'Pano adı boş bırakılamaz.'
+      );
       return;
     }
 
     try {
       setSaving(true);
 
-      const token = await SecureStore.getItemAsync('token');
+      const token =
+        await SecureStore.getItemAsync(
+          'token'
+        );
 
       if (!token) {
-        Alert.alert('Hata', 'Oturum bulunamadı.');
+        Alert.alert(
+          'Hata',
+          'Oturum bulunamadı.'
+        );
         return;
       }
 
-      const response = await fetch(
-        `https://task-management-app-xc7f.onrender.com/boards/${boardId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            description: description.trim(),
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `https://task-management-app-xc7f.onrender.com/boards/${boardId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type':
+                'application/json',
+              Authorization:
+                `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: name.trim(),
+              description:
+                description.trim(),
+            }),
+          }
+        );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         Alert.alert(
           'Hata',
-          data.message || 'Pano güncellenemedi.'
+          data.message ||
+            'Pano güncellenemedi.'
         );
         return;
       }
@@ -147,7 +206,8 @@ export default function EditBoardScreen() {
         [
           {
             text: 'Tamam',
-            onPress: () => router.back(),
+            onPress: () =>
+              router.back(),
           },
         ]
       );
@@ -165,9 +225,28 @@ export default function EditBoardScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor:
+              colors.background,
+          },
+        ]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
+
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
           Pano yükleniyor...
         </Text>
       </View>
@@ -175,25 +254,87 @@ export default function EditBoardScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Pano Düzenle</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Pano Düzenle
+      </Text>
 
-      <Text style={styles.label}>Pano Adı</Text>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Pano Adı
+      </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         value={name}
         onChangeText={setName}
         placeholder="Pano adı"
+        placeholderTextColor={
+          colors.secondaryText
+        }
       />
 
-      <Text style={styles.label}>Açıklama</Text>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Açıklama
+      </Text>
 
       <TextInput
-        style={[styles.input, styles.descriptionInput]}
+        style={[
+          styles.input,
+          styles.descriptionInput,
+          {
+            color: colors.text,
+            borderColor:
+              colors.border,
+            backgroundColor:
+              colors.input,
+          },
+        ]}
         value={description}
-        onChangeText={setDescription}
+        onChangeText={
+          setDescription
+        }
         placeholder="Pano açıklaması"
+        placeholderTextColor={
+          colors.secondaryText
+        }
         multiline
       />
 
@@ -205,7 +346,9 @@ export default function EditBoardScreen() {
         {saving ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Kaydet</Text>
+          <Text style={styles.buttonText}>
+            Kaydet
+          </Text>
         )}
       </TouchableOpacity>
 
@@ -214,7 +357,9 @@ export default function EditBoardScreen() {
         onPress={() => router.back()}
         disabled={saving}
       >
-        <Text style={styles.buttonText}>İptal</Text>
+        <Text style={styles.buttonText}>
+          İptal
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -223,7 +368,6 @@ export default function EditBoardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 20,
     paddingTop: 60,
   },
@@ -254,12 +398,10 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 10,
     padding: 14,
     fontSize: 16,
     marginBottom: 20,
-    backgroundColor: '#fff',
   },
 
   descriptionInput: {
@@ -268,7 +410,8 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor:
+      '#007AFF',
     borderRadius: 10,
     paddingVertical: 15,
     alignItems: 'center',
@@ -276,7 +419,8 @@ const styles = StyleSheet.create({
   },
 
   cancelButton: {
-    backgroundColor: '#333',
+    backgroundColor:
+      '#333',
     borderRadius: 10,
     paddingVertical: 15,
     alignItems: 'center',

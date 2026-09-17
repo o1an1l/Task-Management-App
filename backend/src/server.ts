@@ -5,6 +5,7 @@ import { prisma } from "./lib/prisma";
 import { authenticateToken, AuthRequest } from "./middleware/auth";
 import authRoutes from "./routes/auth";
 import boardRoutes from "./routes/boards";
+import commentRoutes from "./routes/comments";
 import listRoutes from "./routes/lists";
 import taskRoutes from "./routes/tasks";
 
@@ -17,6 +18,7 @@ app.use("/auth", authRoutes);
 app.use("/boards", boardRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/lists", listRoutes);
+app.use("/comments", commentRoutes);
 
 app.get("/", (req, res) => {
   res.json({
